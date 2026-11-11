@@ -13,15 +13,17 @@ bot-engine editor, then compares what each server saved.
 
 ## How to run
 
-1. Start the legacy engine and bot-engine, each with a bot archive imported (the archive is read
-   in place and is not copied into the repository).
+1. Start the legacy engine and bot-engine.
 2. Run:
 
 ```sh
-BOT_TGZ=/path/to/bot_export.tgz \
 LEGACY_URL=http://localhost:53901 LEGACY_EMAIL=... LEGACY_PASSWORD=... \
 OURS_URL=http://localhost:53950 OURS_EMAIL=... OURS_PASSWORD=... \
 make e2e-parity
 ```
+
+Without `BOT_TGZ`, the runner packs `testdata/bots/synthetic-parity` and imports it into both servers.
+To run against another bot archive, set `BOT_TGZ=/path/to/bot.tgz` (it is read in place and is not
+copied into the repository).
 
 `PARITY_BOT_ID` selects the bot id used on both sides (default `example-bot`).

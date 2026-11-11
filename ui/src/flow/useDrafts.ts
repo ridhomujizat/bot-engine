@@ -34,33 +34,41 @@ export function useDrafts(server: Record<string, FlowDoc>) {
     [server],
   )
 
-  const undo = useCallback((name: string) => {
-    setState((prev) => {
-      const past = prev.past[name] ?? []
-      const current = prev.docs[name]
-      if (past.length === 0 || !current) return prev
-      const previous = past[past.length - 1]
-      return {
-        docs: { ...prev.docs, [name]: previous },
-        past: { ...prev.past, [name]: past.slice(0, -1) },
-        future: { ...prev.future, [name]: [current, ...(prev.future[name] ?? [])] },
-      }
-    })
-  }, [])
+  // The current state is the draft, or the saved document once autosave has settled the draft.
+  // Undo and redo must work in both cases: the restored state becomes a draft and saves again.
+  const undo = useCallback(
+    (name: string) => {
+      setState((prev) => {
+        const past = prev.past[name] ?? []
+        const current = prev.docs[name] ?? server[name]
+        if (past.length === 0 || !current) return prev
+        const previous = past[past.length - 1]
+        return {
+          docs: { ...prev.docs, [name]: previous },
+          past: { ...prev.past, [name]: past.slice(0, -1) },
+          future: { ...prev.future, [name]: [current, ...(prev.future[name] ?? [])] },
+        }
+      })
+    },
+    [server],
+  )
 
-  const redo = useCallback((name: string) => {
-    setState((prev) => {
-      const future = prev.future[name] ?? []
-      const current = prev.docs[name]
-      if (future.length === 0 || !current) return prev
-      const [next, ...rest] = future
-      return {
-        docs: { ...prev.docs, [name]: next },
-        past: { ...prev.past, [name]: [...(prev.past[name] ?? []), current] },
-        future: { ...prev.future, [name]: rest },
-      }
-    })
-  }, [])
+  const redo = useCallback(
+    (name: string) => {
+      setState((prev) => {
+        const future = prev.future[name] ?? []
+        const current = prev.docs[name] ?? server[name]
+        if (future.length === 0 || !current) return prev
+        const [next, ...rest] = future
+        return {
+          docs: { ...prev.docs, [name]: next },
+          past: { ...prev.past, [name]: [...(prev.past[name] ?? []), current] },
+          future: { ...prev.future, [name]: rest },
+        }
+      })
+    },
+    [server],
+  )
 
   /** Drops the drafts once they are saved (or thrown away). */
   const discard = useCallback((names: string[]) => {

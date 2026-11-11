@@ -13,9 +13,10 @@ import {
   type EdgeChange,
   type Node,
   type NodeMouseHandler,
+  useNodes,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { Maximize2, Minus, Plus, Square, Zap } from 'lucide-react'
+import { LayoutGrid, Maximize2, Minus, Move, Network, Plus, Square, Zap } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { FlowActionsContext, type FlowActions } from './flowActions'
@@ -25,6 +26,7 @@ import { StepEdge } from './StepEdge'
 import type { Point } from '@/api/types'
 import { cn } from '@/lib/utils'
 import type { EdgeStyle } from './edgeStyle'
+import { objectsOf, overlappingIds, sizesOf, tidyPositions, type TidyMode } from './tidy'
 
 const EDGE_STYLE_OPTIONS: Array<{ value: EdgeStyle; label: string }> = [
   { value: 'straight', label: 'Straight' },
@@ -68,6 +70,8 @@ export interface CanvasHandlers extends FlowActions {
   onPointer: (point: Point) => void
   /** The pane was clicked: closes any menu and the properties. */
   onPaneClick: () => void
+  /** A short message for the page's notice line (tidy results). */
+  onNotice: (text: string) => void
 }
 
 export interface CanvasProps {
@@ -76,6 +80,9 @@ export interface CanvasProps {
   /** A node the page wants selected once it exists (a node just dropped or created). */
   selectRequest: string | null
   onSelectRequestDone: () => void
+  /** The overlap hint was closed for this flow. */
+  hintDismissed: boolean
+  onDismissHint: () => void
   /** Drawing style of every edge; a view setting, saved per browser by the page. */
   edgeStyle: EdgeStyle
   onEdgeStyleChange: (style: EdgeStyle) => void
@@ -95,10 +102,14 @@ export function FlowCanvas(props: CanvasProps) {
   )
 }
 
-function Canvas({ nodes, edges, selectRequest, onSelectRequestDone, edgeStyle, onEdgeStyleChange, handlers }: CanvasProps) {
+function Canvas({ nodes, edges, selectRequest, onSelectRequestDone, hintDismissed, onDismissHint, edgeStyle, onEdgeStyleChange, handlers }: CanvasProps) {
   const [rfNodes, setRfNodes, onNodesChange] = useNodesState<FlowRFNode>(nodes)
-  const { screenToFlowPosition, zoomIn, zoomOut, fitView } = useReactFlow()
+  const { screenToFlowPosition, zoomIn, zoomOut, fitView, getNodes } = useReactFlow()
   const zoom = useStore((s) => Math.round(s.transform[2] * 100))
+  const [tidyOpen, setTidyOpen] = useState(false)
+  // Overlaps as drawn: the live nodes carry React Flow's measured sizes once rendered (estimates before).
+  const live = useNodes<FlowRFNode>()
+  const overlapCount = useMemo(() => overlappingIds(objectsOf(live, edges, sizesOf(live))).length, [live, edges])
  // Edge selection is ours: React Flow reports it through onEdgesChange and the page never stores it.
   const [selectedEdges, setSelectedEdges] = useState<Set<string>>(new Set())
  // A press that moved a node is a drag, not a click: it must not open the properties. React Flow
@@ -125,7 +136,26 @@ function Canvas({ nodes, edges, selectRequest, onSelectRequestDone, edgeStyle, o
     onSelectRequestDone()
   }, [nodes, selectRequest, rfNodes, onNodesChange, onSelectRequestDone])
 
+  /**
+   * One tidy action is one page edit, so one undo step. The view fits once the moved nodes are drawn.
+   * Reads the nodes as React Flow measured them, so the sizes are the rendered ones.
+   */
+  async function runTidy(mode: TidyMode, selectedOnly: boolean) {
+    setTidyOpen(false)
+    const current = getNodes() as FlowRFNode[]
+    const subset = selectedOnly ? new Set(current.filter((n) => n.selected && n.type !== 'terminal').map((n) => n.id)) : null
+    const positions = await tidyPositions(current, edges, mode, subset)
+    if (Object.keys(positions).length === 0) {
+      handlers.onNotice(mode === 'fix' ? 'No overlaps to fix' : 'Nodes are already tidy')
+      return
+    }
+    handlers.onMove(positions)
+    // A tidied flow can be larger than the canvas's default minimum zoom (0.25) shows: allow zooming further out.
+    window.setTimeout(() => void fitView({ padding: 0.2, duration: 300, minZoom: 0.1 }), 60)
+  }
+
   const selectedIds = useMemo(() => new Set(rfNodes.filter((n) => n.selected).map((n) => n.id)), [rfNodes])
+  const selectedCount = selectedIds.size
   const styledEdges = useMemo(
     () =>
       edges.map((e) => ({
@@ -185,7 +215,7 @@ function Canvas({ nodes, edges, selectRequest, onSelectRequestDone, edgeStyle, o
   return (
     <FlowActionsContext.Provider value={handlers}>
       <div
-        className="h-full w-full"
+        className="relative h-full w-full"
         onDragOver={(e) => e.preventDefault()}
         onDrop={onDrop}
         onMouseMove={(e) => handlers.onPointer(screenToFlowPosition({ x: e.clientX, y: e.clientY }))}
@@ -230,7 +260,10 @@ function Canvas({ nodes, edges, selectRequest, onSelectRequestDone, edgeStyle, o
           onNodeDoubleClick={(_event, node) => handlers.onEditNode(node.id)}
           onNodeDragStart={onNodeDragStart}
           onNodeDragStop={onNodeDragStop}
-          onPaneClick={() => handlers.onPaneClick()}
+          onPaneClick={() => {
+            setTidyOpen(false)
+            handlers.onPaneClick()
+          }}
           onPaneContextMenu={(event) => {
             event.preventDefault()
             const point = { x: event.clientX, y: event.clientY }
@@ -249,6 +282,30 @@ function Canvas({ nodes, edges, selectRequest, onSelectRequestDone, edgeStyle, o
           proOptions={{ hideAttribution: true }}
         >
           <Background variant={BackgroundVariant.Dots} gap={24} size={1.5} color="#D4D4D8" />
+          {overlapCount > 0 && !hintDismissed && (
+            <Panel position="bottom-center" className="flex items-center gap-2 rounded-full border border-border bg-background py-1 pr-1 pl-3 text-xs shadow-md">
+              <div role="status" className="flex items-center gap-2">
+                <span>
+                  {overlapCount} {overlapCount === 1 ? 'node overlaps' : 'nodes overlap'} —
+                </span>
+                <button
+                  type="button"
+                  onClick={() => void runTidy('fix', false)}
+                  className="rounded-full bg-primary px-2.5 py-0.5 font-medium text-primary-foreground hover:opacity-90"
+                >
+                  Fix overlaps
+                </button>
+              </div>
+              <button
+                type="button"
+                aria-label="Dismiss"
+                onClick={onDismissHint}
+                className="flex size-6 items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
+              >
+                ×
+              </button>
+            </Panel>
+          )}
           <Panel position="top-left" className="flex w-[116px] flex-col gap-1.5 rounded-xl border border-border bg-background p-2 shadow-md">
             <span className="px-1 text-[11px] font-medium text-muted-foreground">Drag to add</span>
             <PaletteItem kind="standard" label="Node" icon={<Square className="size-2.5 text-white" />} tile="bg-primary" />
@@ -285,10 +342,41 @@ function Canvas({ nodes, edges, selectRequest, onSelectRequestDone, edgeStyle, o
             <Button variant="ghost" size="icon-sm" aria-label="Fit view" onClick={() => void fitView({ padding: 0.2 })}>
               <Maximize2 />
             </Button>
+            <span className="mx-1 h-4 w-px bg-border" />
+            <div className="relative" onKeyDown={(e) => e.key === 'Escape' && setTidyOpen(false)}>
+              <Button variant="ghost" aria-haspopup="menu" aria-expanded={tidyOpen} onClick={() => setTidyOpen((open) => !open)}>
+                <LayoutGrid /> Tidy up
+              </Button>
+              {tidyOpen && (
+                <div role="menu" aria-label="Tidy up" className="absolute bottom-full left-0 mb-2 flex w-64 flex-col gap-0.5 rounded-xl border border-border bg-background p-1 shadow-md">
+                  <TidyItem icon={<Move />} label="Fix overlaps" detail="Keeps your layout, moves only crowded nodes" onSelect={() => void runTidy('fix', false)} />
+                  <TidyItem icon={<Network />} label="Auto-arrange" detail="Lays the flow out left to right from the start node" onSelect={() => void runTidy('arrange', false)} />
+                  {selectedCount >= 2 && (
+                    <>
+                      <span className="my-1 h-px bg-border" />
+                      <TidyItem icon={<Move />} label="Fix selected" detail={`Only the ${selectedCount} selected nodes move`} onSelect={() => void runTidy('fix', true)} />
+                      <TidyItem icon={<Network />} label="Arrange selected" detail={`Lays out the ${selectedCount} selected nodes`} onSelect={() => void runTidy('arrange', true)} />
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </Panel>
         </ReactFlow>
       </div>
     </FlowActionsContext.Provider>
+  )
+}
+
+function TidyItem({ icon, label, detail, onSelect }: { icon: ReactNode; label: string; detail: string; onSelect: () => void }) {
+  return (
+    <button type="button" role="menuitem" onClick={onSelect} className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-left hover:bg-muted">
+      <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground [&_svg]:size-3.5">{icon}</span>
+      <span className="flex min-w-0 flex-col">
+        <span className="text-xs font-medium">{label}</span>
+        <span className="text-[11px] leading-4 text-muted-foreground">{detail}</span>
+      </span>
+    </button>
   )
 }
 

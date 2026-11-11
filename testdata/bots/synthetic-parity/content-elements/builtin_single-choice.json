@@ -1,0 +1,18 @@
+[
+  {
+    "id": "builtin_single-choice-dev1",
+    "formData": {
+      "text$en": "ini haya dev",
+      "choices$en": [
+        {
+          "title": "Ya",
+          "value": "Ya"
+        },
+        {
+          "title": "Tidak",
+          "value": "Tidak"
+        }
+      ]
+    }
+  }
+]

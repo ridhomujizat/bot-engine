@@ -2,7 +2,7 @@ import { expect, type Locator, type Page } from '@playwright/test'
 import { dragNodeBy, type Session } from './parity-lib'
 
 // Drives legacy editor (the reference editor) through its own UI. Selectors come from the
-// legacy source: palette #btn-tool-<id>, #diagramContainer,
+// legacy source (the FlowBuilder view): palette #btn-tool-<id>, #diagramContainer,
 // inspector name input, Blueprint dialogs. Never sends emulator messages.
 
 export type Point = { x: number; y: number }
@@ -11,7 +11,7 @@ export type Point = { x: number; y: number }
 export async function legacySignIn(page: Page, s: Session) {
   await page.addInitScript(
     ([token, exp, iat]) => {
- // The guided tour blocks the canvas on first visit.
+      // The guided tour blocks the canvas on first visit.
       for (const store of [localStorage, sessionStorage]) {
         store.setItem('guidedTour11_9_0', 'true')
         store.setItem('bp/token', JSON.stringify({ token, expiresAt: exp, issuedAt: iat }))
@@ -39,7 +39,7 @@ export class LegacyDriver {
   }
 
   async openFlow(flow: string) {
- // Flow files are addressed by their list name: main.flow.json opens as "main".
+    // Flow files are addressed by their list name: main.flow.json opens as "main".
     const slug = flow.replace(/\.flow\.json$/, '').replace(/^main$/, 'main')
     await this.page.goto(`${this.base}/studio/${this.botId}/flows/${slug}`)
     await expect(this.page.locator('#btn-tool-standard')).toBeVisible({ timeout: 30_000 })
@@ -92,9 +92,9 @@ export class LegacyDriver {
   }
 
   /**
- * Moves a node by a canvas offset (units, not screen pixels: the two editors open at different zoom).
- * legacy snaps the result to its grid.
- */
+   * Moves a node by a canvas offset (units, not screen pixels: the two editors open at different zoom).
+   * legacy snaps the result to its grid.
+   */
   async move(name: string, dx: number, dy: number) {
     const scale = await this.zoomScale()
     const box = await this.node(name).boundingBox()
@@ -122,6 +122,12 @@ export class LegacyDriver {
     await this.settle()
   }
 
+  /** Fits every node in the view (the diagram toolbar's zoom-to-fit). */
+  async fitView() {
+    await this.page.locator('.bp3-icon-zoom-to-fit').first().click({ timeout: 10_000 })
+    await this.settle()
+  }
+
   /** Copies a node and pastes it with Ctrl+V; returns the copy's name (legacy copyName). */
   async copyPaste(name: string): Promise<string> {
     await this.select(name)
@@ -132,11 +138,11 @@ export class LegacyDriver {
   }
 
   /**
- * Links transition `index` of `from` to node `to`: drag from the output port to the target's input port.
- * legacy ports are storm-react-diagrams divs (data-name="out<n>" / "in", inside the node).
- */
+   * Links transition `index` of `from` to node `to`: drag from the output port to the target's input port.
+   * legacy ports are storm-react-diagrams divs (data-name="out<n>" / "in", inside the node).
+   */
   async link(from: string, index: number, to: string) {
- // Fit the canvas first: a node dropped far from the origin sits behind the Inspector otherwise.
+    // Fit the canvas first: a node dropped far from the origin sits behind the Inspector otherwise.
     await this.page.locator('.bp3-icon-zoom-to-fit').first().click()
     await this.settle()
     const src = this.node(from).locator(`[data-name="out${index}"]`).first()
@@ -157,25 +163,25 @@ export class LegacyDriver {
     await this.page.mouse.up()
   }
 
- // ---- choice skill ----------------------------------------------------------------------------
+  // ---- choice skill ----------------------------------------------------------------------------
 
   /**
- * Inserts a choice skill: the choice tool dropped on the canvas, a question picked through legacy's
- * content picker, one extra keyword on the first choice, and max retries (Advanced tab).
- * Returns the name legacy gives the new skill node (choice-<6>).
- */
+   * Inserts a choice skill: the choice tool dropped on the canvas, a question picked through legacy's
+   * content picker, one extra keyword on the first choice, and max retries (Advanced tab).
+   * Returns the name legacy gives the new skill node (choice-<6>).
+   */
   async addChoice(at: Point, question: string, keyword: string, maxRetries: number): Promise<string> {
     const before = new Set(await this.nodeTitles())
     await this.page.locator('#btn-tool-choice').dragTo(this.canvas(), { targetPosition: at })
     const dialog = this.choiceDialog()
     await expect(dialog).toBeVisible({ timeout: 15_000 })
- // The picker's folder button (the input itself is disabled; its wrapper opens the picker too).
+    // The picker's folder button (the input itself is disabled; its wrapper opens the picker too).
     await dialog.locator('.bp3-icon-folder-open').first().click()
     await this.pickFromContentPicker(question)
     await this.fillChoiceFields(dialog, keyword, maxRetries)
     await dialog.locator('.bp3-dialog-footer').getByRole('button', { name: 'Insert', exact: true }).click()
     await this.settle()
- // The node header reads "Choice | choice-<6>" in legacy: the name is the part after the bar.
+    // The node header reads "Choice | choice-<6>" in legacy: the name is the part after the bar.
     const created = (await this.nodeTitles())
       .filter((t) => !before.has(t))
       .map((t) => t.match(/choice-[0-9a-z]{6}/)?.[0])
@@ -186,8 +192,8 @@ export class LegacyDriver {
 
   /** Opens a choice skill node in its editor (double-click) and sets max retries and one extra keyword. */
   async editChoice(name: string, keyword: string, maxRetries: number) {
- // Skill nodes read "Choice | <name>" in legacy, so match the name as part of the header. The skill
- // editor opens from the properties panel of the selected node ("Edit skill").
+    // Skill nodes read "Choice | <name>" in legacy, so match the name as part of the header. The skill
+    // editor opens from the properties panel of the selected node ("Edit skill").
     await this.page.locator('[data-nodeid]').filter({ hasText: name }).first().locator('text=/./').first().click({ force: true })
     await this.settle()
     await this.page.getByRole('button', { name: 'Edit skill', exact: true }).click()
@@ -223,7 +229,7 @@ export class LegacyDriver {
     await this.settle()
   }
 
- // ---- say actions and transitions -------------------------------------------------------------
+  // ---- say actions and transitions -------------------------------------------------------------
 
   /** The action modal (Say Something / Execute code), found by its submit button. */
   private actionModal(): Locator {
@@ -237,12 +243,12 @@ export class LegacyDriver {
     await expect(this.actionModal()).toBeVisible({ timeout: 15_000 })
   }
 
-  /** The content picker, opened from the action modal and past its category step (`category`: All, Text,...). */
+  /** The content picker, opened from the action modal and past its category step (`category`: All, Text, ...). */
   private async openPicker(category: string): Promise<Locator> {
     await this.actionModal().locator('.bp3-icon-folder-open').first().click()
     const picker = this.page.locator('.bp3-dialog').filter({ hasText: 'Pick Content' })
     await expect(picker).toBeVisible({ timeout: 10_000 })
- // The picker opens on its category step unless it was given a content type; wait for whichever step shows.
+    // The picker opens on its category step unless it was given a content type; wait for whichever step shows.
     const categoryStep = picker.getByText('Select a category')
     const listStep = picker.getByLabel('Search content elements')
     await expect(categoryStep.or(listStep)).toBeVisible({ timeout: 10_000 })
@@ -252,9 +258,9 @@ export class LegacyDriver {
   }
 
   /**
- * Say something with a new text element: the picker's "Create new Text", then the text form. The message is
- * a editor; typing indicators are on (legacy default, stored as typing$en true), markdown stays off.
- */
+   * Say something with a new text element: the picker's "Create new Text", then the text form. The message is
+   * a Draft.js editor; typing indicators are on (legacy default, stored as typing$en true), markdown stays off.
+   */
   async sayNew(name: string, text: string) {
     await this.openAddAction(name)
     const picker = await this.openPicker('Text')
@@ -294,16 +300,16 @@ export class LegacyDriver {
   private async fillTransition(modal: Locator, condition: string | null, target: string) {
     if (condition !== null) {
       await modal.locator('label', { hasText: 'Raw Expression (advanced)' }).click()
- // The expression is a editor (its placeholder is a text node, not an attribute).
+      // The expression is a Draft.js editor (its placeholder is a text node, not an attribute).
       const expression = modal.locator('[contenteditable="true"]').first()
       await expression.click()
       await this.page.keyboard.press('Control+A')
       await expression.pressSequentially(condition)
     }
     await modal.locator('label', { hasText: 'Transition to node' }).click({ timeout: 10_000 })
- // The node target is a react-select. Open its control (the innermost container of the hidden input named
- // flowToNode), type the name to filter, then click the option whose text is exactly this name: the filter
- // is case-insensitive, so Enter would pick "dev-flow-choice" for "Dev-flow".
+    // The node target is a react-select. Open its control (the innermost container of the hidden input named
+    // flowToNode), type the name to filter, then click the option whose text is exactly this name: the filter
+    // is case-insensitive, so Enter would pick "dev-flow-choice" for "Dev-flow".
     await modal.locator('div').filter({ has: this.page.locator('input[name="flowToNode"]') }).last().click({ timeout: 10_000 })
     await this.page.keyboard.type(target)
     const esc = target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -317,12 +323,10 @@ export class LegacyDriver {
 
   /** Opens the flow-wide panel (bar above the canvas) on its Transitions tab. */
   private async openFlowWideTransitions() {
- // The flow properties tabs read "N On Receive" and "N Transitions" (the bar above the canvas reads lower case).
-    const tab = this.page.getByRole('button', { name: /\d+ Transitions$/ })
-    if (!(await tab.isVisible())) {
-      await this.page.locator('button', { hasText: 'flow-wide transition' }).first().click({ timeout: 10_000 })
-    }
-    await tab.click({ timeout: 10_000 })
+    // The flow properties tabs read "N On Receive" and "N Transitions" (the bar above the canvas reads lower case).
+    // Always through the bar: a node may still be selected, and its own Transitions tab reads the same way.
+    await this.page.locator('button', { hasText: 'flow-wide transition' }).first().click({ timeout: 10_000 })
+    await this.page.getByRole('button', { name: /\d+ Transitions$/ }).click({ timeout: 10_000 })
     await this.settle()
   }
 
@@ -348,7 +352,7 @@ export class LegacyDriver {
   /** Retargets transition `index` of `from` in its modal (double-click its row): keeps the condition. */
   async retargetModal(from: string, index: number, to: string) {
     await this.select(from)
- // The node panel has the same On enter / On receive / Transitions tabs as the flow panel.
+    // The node panel has the same On enter / On receive / Transitions tabs as the flow panel.
     await this.page.getByRole('button', { name: /\d+ Transitions$/ }).click({ timeout: 10_000 })
     await this.settle()
     await this.page.locator('#transition-section [data-rbd-draggable-id]').nth(index).dblclick({ timeout: 10_000 })
@@ -358,10 +362,10 @@ export class LegacyDriver {
     await this.submitTransition(modal, 'Update')
   }
 
- // ---- flows: side panel -----------------------------------------------------------------------
+  // ---- flows: side panel -----------------------------------------------------------------------
 
   async flowNew(name: string) {
- // The "+" in the Flows panel header. The page runs at a fixed 1440x900 viewport, where it sits at (259, 68).
+    // The "+" in the Flows panel header. The page runs at a fixed 1440x900 viewport, where it sits at (259, 68).
     await this.page.mouse.click(259, 68)
     await this.fillFlowName(name, 'Create')
   }
@@ -378,7 +382,7 @@ export class LegacyDriver {
 
   async flowDelete(name: string) {
     await this.flowMenu(name, 'Delete')
- // The confirm dialog's accept button is labelled "Delete" (confirmDialog in the studio shared UI).
+    // The confirm dialog's accept button is labelled "Delete" (confirmDialog in the studio shared UI).
     await this.page.locator('.bp3-overlay-open').getByRole('button', { name: 'Delete', exact: true }).click()
     await this.settle()
   }

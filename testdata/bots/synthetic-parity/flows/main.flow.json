@@ -1,0 +1,96 @@
+{
+  "version": "0.0.1",
+  "catchAll": {},
+  "startNode": "init",
+  "nodes": [
+    {
+      "id": "n-init",
+      "name": "init",
+      "onEnter": [
+        "say #!builtin_text-parity-hello"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "true",
+          "node": "Select-Flow"
+        }
+      ]
+    },
+    {
+      "id": "n-select-flow",
+      "name": "Select-Flow",
+      "onEnter": [],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"1\"",
+          "node": "validation"
+        },
+        {
+          "condition": "event.payload.text === \"2\"",
+          "node": "END"
+        },
+        {
+          "condition": "true",
+          "node": "validation"
+        }
+      ]
+    },
+    {
+      "id": "n-validation",
+      "name": "validation",
+      "onEnter": [
+        "say #!builtin_text-ask-number"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "true",
+          "node": "Select-Flow"
+        }
+      ]
+    },
+    {
+      "id": "n-wait-user-select",
+      "name": "wait-user-select",
+      "onEnter": [
+        "say #!builtin_text-wait"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "n-dev-flow",
+      "name": "Dev-flow",
+      "onEnter": [],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "skill-devflowchoice",
+      "type": "skill-call",
+      "skill": "choice",
+      "name": "dev-flow-choice",
+      "flow": "skills/dev-flow-choice.flow.json",
+      "next": [
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ],
+      "onEnter": null,
+      "onReceive": null
+    }
+  ]
+}

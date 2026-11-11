@@ -88,6 +88,8 @@ export function FlowEditorPage() {
   const [flowWide, setFlowWide] = useState(false)
   const [menu, setMenu] = useState<CreateMenuRequest | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  // Flows whose overlap hint the user closed (until the page is reloaded).
+  const [hintsClosed, setHintsClosed] = useState<string[]>([])
   const [edgeStyle, setEdgeStyle] = useState<EdgeStyle>(() => readEdgeStyle())
   const changeEdgeStyle = (style: EdgeStyle) => {
     writeEdgeStyle(style)
@@ -599,7 +601,10 @@ export function FlowEditorPage() {
                 edgeStyle={edgeStyle}
                 onEdgeStyleChange={changeEdgeStyle}
                 onSelectRequestDone={() => setSelectRequest(null)}
+                hintDismissed={hintsClosed.includes(flowName)}
+                onDismissHint={() => setHintsClosed((closed) => [...closed, flowName])}
                 handlers={{
+                  onNotice: (text) => setNotice(text),
                   removeTransition: (nodeId, index) => editDoc((d) => removeTransition(d, nodeId, index)),
                   editTransition: (nodeId, index) => setDialog({ kind: 'transition', nodeId, index }),
                   onSelect: (ids) => setSelected((prev) => (sameIds(prev, ids) ? prev : ids)),

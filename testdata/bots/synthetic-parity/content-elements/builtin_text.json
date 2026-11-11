@@ -1,0 +1,20 @@
+[
+  {
+    "id": "builtin_text-parity-hello",
+    "formData": {
+      "text$en": "Hello from the parity fixture"
+    }
+  },
+  {
+    "id": "builtin_text-ask-number",
+    "formData": {
+      "text$en": "Silahkan masukkan nomor anda"
+    }
+  },
+  {
+    "id": "builtin_text-wait",
+    "formData": {
+      "text$en": "Waiting for your choice"
+    }
+  }
+]

@@ -41,7 +41,7 @@ clean:
 e2e-ui:
 	./e2e-ui/run.sh
 
-## e2e-parity: legacy vs bot-engine editor data parity (needs both servers and BOT_TGZ); see docs/editor-parity.md
+## e2e-parity: legacy vs bot-engine editor data parity (needs both servers; BOT_TGZ optional, defaults to the synthetic fixture); see docs/editor-parity.md
 .PHONY: e2e-parity
 e2e-parity:
 	./e2e-ui/parity.sh

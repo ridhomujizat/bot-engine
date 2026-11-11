@@ -1,0 +1,47 @@
+{
+  "nodes": [
+    {
+      "id": "n-init",
+      "position": {
+        "x": 120,
+        "y": 100
+      }
+    },
+    {
+      "id": "n-select-flow",
+      "position": {
+        "x": 380,
+        "y": 100
+      }
+    },
+    {
+      "id": "n-validation",
+      "position": {
+        "x": 640,
+        "y": 100
+      }
+    },
+    {
+      "id": "n-wait-user-select",
+      "position": {
+        "x": 640,
+        "y": 260
+      }
+    },
+    {
+      "id": "n-dev-flow",
+      "position": {
+        "x": 120,
+        "y": 260
+      }
+    },
+    {
+      "id": "skill-devflowchoice",
+      "position": {
+        "x": 380,
+        "y": 260
+      }
+    }
+  ],
+  "links": []
+}

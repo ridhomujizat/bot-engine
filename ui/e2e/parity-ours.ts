@@ -58,6 +58,12 @@ export class OursDriver {
     await this.page.getByText(label, { exact: true }).first().dragTo(pane, { targetPosition: { x: at.x - box.x, y: at.y - box.y } })
   }
 
+  /** Fits every node in the view (the canvas's "Fit view" control). */
+  async fitView() {
+    await this.page.getByRole('button', { name: 'Fit view', exact: true }).click({ timeout: 10_000 })
+    await this.settle()
+  }
+
   async select(name: string) {
     await this.node(name).locator('span.truncate').first().click()
     await this.settle()
@@ -72,9 +78,9 @@ export class OursDriver {
   }
 
   /**
- * Moves a node by a canvas offset (units, not screen pixels: the two editors open at different zoom).
- * The grid snap is the editor's own (5 units).
- */
+   * Moves a node by a canvas offset (units, not screen pixels: the two editors open at different zoom).
+   * The grid snap is the editor's own (5 units).
+   */
   async move(name: string, dx: number, dy: number) {
     const scale = await this.zoomScale()
     const header = this.node(name).locator('span.truncate').first()
@@ -126,7 +132,7 @@ export class OursDriver {
     await this.settle()
   }
 
- // ---- choice skill ----------------------------------------------------------------------------
+  // ---- choice skill ----------------------------------------------------------------------------
 
   /** Titles of the nodes on the canvas (the header text of each node). */
   async nodeTitles(): Promise<string[]> {
@@ -156,8 +162,8 @@ export class OursDriver {
 
   /** Double-click opens the choice editor (same as legacy). */
   async editChoice(name: string, keyword: string, maxRetries: number) {
- // The node can sit under another node on the canvas (fixture layout), so the event is dispatched on
- // the node itself: a real click would land on the node drawn over it.
+    // The node can sit under another node on the canvas (fixture layout), so the event is dispatched on
+    // the node itself: a real click would land on the node drawn over it.
     await this.node(name).dispatchEvent('dblclick', undefined, { timeout: 10_000 })
     const dialog = this.page.getByRole('dialog')
     await expect(dialog).toBeVisible({ timeout: 15_000 })
@@ -176,7 +182,7 @@ export class OursDriver {
     await this.settle()
   }
 
- // ---- say actions and transitions -------------------------------------------------------------
+  // ---- say actions and transitions -------------------------------------------------------------
 
   /** Opens "Add action" in the On enter list of the selected node (the first one in the panel). */
   private async openAddAction(name: string): Promise<Locator> {
@@ -247,7 +253,7 @@ export class OursDriver {
   /** Retargets transition `index` of `from` in its dialog (Edit transition): keeps the condition. */
   async retargetModal(from: string, index: number, to: string) {
     await this.select(from)
- // The node inspector has On enter / On receive / Transitions tabs.
+    // The node inspector has On enter / On receive / Transitions tabs.
     await this.page.getByRole('tab', { name: 'Transitions', exact: true }).click()
     await this.page.getByRole('button', { name: 'Edit transition', exact: true }).nth(index).click()
     const dialog = this.page.getByRole('dialog')
@@ -257,7 +263,7 @@ export class OursDriver {
     await this.settle()
   }
 
- // ---- flows -----------------------------------------------------------------------------------
+  // ---- flows -----------------------------------------------------------------------------------
 
   async flowNew(name: string) {
     await this.page.getByRole('button', { name: 'New flow' }).click()

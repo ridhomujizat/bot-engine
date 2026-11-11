@@ -4,7 +4,8 @@
 #   1. starts a throwaway Postgres 16 (initdb in $E2E_RUN_DIR)
 #   2. seeds legacy tables + one login (e2e/e2e-pass-123) via e2e-ui/seed
 #   3. builds the editor SPA (ui/ -> internal/web/dist) and the server binary (embeds the SPA)
-#   4. starts bot-engine with PG-backed bot content and imports the synthetic fixture bot
+#   4. starts bot-engine with PG-backed bot content and imports the synthetic fixture bots
+#      (testdata/bots/synthetic-core and synthetic-dense)
 #   5. runs the Playwright specs in ui/e2e against http://localhost:$E2E_PORT/studio/
 #
 # Everything runs inside `nix develop`. Stops the server and Postgres on exit.
@@ -23,6 +24,7 @@ DB_NAME="bots_e2e"
 EMAIL="e2e@example.com"
 PASSWORD="e2e-pass-123"
 BOT_ID="e2e-core"
+DENSE_BOT_ID="e2e-dense"
 DSN="postgres://postgres@localhost:${PG_PORT}/${DB_NAME}?sslmode=disable"
 BASE="http://localhost:${PORT}"
 
@@ -74,21 +76,28 @@ for _ in $(seq 1 100); do
 done
 curl -fsS -o /dev/null "$BASE/studio/"
 
-echo "[e2e] import fixture bot $BOT_ID"
 TOKEN="$(curl -fsS -X POST "$BASE/api/v1/auth/login/basic/default" -H 'Content-Type: application/json' \
   -d "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}" | sed -n 's/.*"jwt":"\([^"]*\)".*/\1/p')"
 [[ -n "$TOKEN" ]] || { echo "[e2e] login failed"; exit 1; }
-FIXTURE_TMP="$(mktemp -d "$RUN_DIR/fixture.XXXX")"
-cp -R "$ROOT/testdata/bots/synthetic-core" "$FIXTURE_TMP/synthetic-core"
-tar -czf "$RUN_DIR/fixture.tgz" -C "$FIXTURE_TMP" synthetic-core
-rm -rf "$FIXTURE_TMP"
-curl -fsS -X POST "$BASE/api/v1/admin/workspace/bots/$BOT_ID/import?overwrite=true" \
-  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/tar+gzip' \
-  --data-binary "@$RUN_DIR/fixture.tgz" >/dev/null
+
+# import_fixture <testdata folder> <bot id>: packs the folder as a .tgz and imports it through the admin API.
+import_fixture() {
+  local name="$1" id="$2" tmp
+  echo "[e2e] import fixture $name as bot $id"
+  tmp="$(mktemp -d "$RUN_DIR/fixture.XXXX")"
+  cp -R "$ROOT/testdata/bots/$name" "$tmp/$name"
+  tar -czf "$RUN_DIR/$name.tgz" -C "$tmp" "$name"
+  rm -rf "$tmp"
+  curl -fsS -X POST "$BASE/api/v1/admin/workspace/bots/$id/import?overwrite=true" \
+    -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/tar+gzip' \
+    --data-binary "@$RUN_DIR/$name.tgz" >/dev/null
+}
+import_fixture synthetic-core "$BOT_ID"
+import_fixture synthetic-dense "$DENSE_BOT_ID"
 
 
 echo "[e2e] playwright"
-export E2E_BASE="$BASE" E2E_EMAIL="$EMAIL" E2E_PASSWORD="$PASSWORD" E2E_BOT_ID="$BOT_ID"
+export E2E_BASE="$BASE" E2E_EMAIL="$EMAIL" E2E_PASSWORD="$PASSWORD" E2E_BOT_ID="$BOT_ID" E2E_DENSE_BOT_ID="$DENSE_BOT_ID"
 # The bot is throwaway (the database is recreated above), so the write-gated specs run too.
 export E2E_EDITOR_WRITE=1
 export E2E_DSN="$DSN" E2E_SHOTS="${E2E_SHOTS:-$RUN_DIR/screenshots}"

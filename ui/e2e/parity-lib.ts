@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
 
 // Shared pieces of the legacy vs bot-engine parity runner (docs/editor-parity.md). Everything here is
-// plain HTTP or pure functions; the two UI drivers live in and 
+// plain HTTP or pure functions; the two UI drivers live in parity-legacy.ts and parity-ours.ts.
 
 export const LEGACY_URL = process.env.LEGACY_URL ?? ''
 export const OURS_URL = process.env.OURS_URL ?? ''
@@ -116,22 +116,23 @@ export function normalize(flows: Flow[], fixture: { ids: Set<string>; names: Set
     return out
   }
   const isGenNode = (n: FlowNode) => !fixture.ids.has(n.id)
-  const sorted = [...flows].sort((a, b) => a.name.localeCompare(b.name))
- // Walk in one fixed order so placeholders are numbered the same on both sides.
+  // Fixture flows first (their order is the archive's), then the flows a scenario created, each group by name.
+  const sorted = [...flows].sort((a, b) => Number(fixture.flows.has(b.name)) - Number(fixture.flows.has(a.name)) || a.name.localeCompare(b.name))
+  // Walk in one fixed order so placeholders are numbered the same on both sides.
   for (const f of sorted) for (const n of f.nodes) if (isGenNode(n)) label(ids, n.id, 'id')
   for (const f of sorted) for (const n of f.nodes) if (isGenNode(n)) label(names, n.name, 'node')
   for (const f of sorted) if (!fixture.flows.has(f.name)) label(files, f.name, 'flow')
 
   const mapName = (name: string) => (names.has(name) ? names.get(name)! : name)
   const mapId = (id: string) => (ids.has(id) ? ids.get(id)! : id)
- // A skill's randomId (skillData.randomId, 10 random chars) is generated per insert and also appears
- // inside action strings and conditions of the skill and of its parent flow, e.g. "skill-choice-ret-<id>".
- // Every occurrence becomes <rid>. Known gap: this would hide a string that names a different id than
- // its own skillData; the skillData.randomId itself is still compared (as <rand>, so only its presence).
+  // A skill's randomId (skillData.randomId, 10 random chars) is generated per insert and also appears
+  // inside action strings and conditions of the skill and of its parent flow, e.g. "skill-choice-ret-<id>".
+  // Every occurrence becomes <rid>. Known gap: this would hide a string that names a different id than
+  // its own skillData; the skillData.randomId itself is still compared (as <rand>, so only its presence).
   const randomIds = [...new Set(flows.flatMap((f) => { const r = (f.skillData as { randomId?: unknown } | undefined)?.randomId; return typeof r === 'string' && r ? [r] : [] }))]
- // Random 6-char and 10-char tokens inside action strings, e.g. "#!builtin_text-aLG3CW".
+  // Random 6-char and 10-char tokens inside action strings, e.g. "#!builtin_text-aLG3CW".
   const scrubTokens = (s: string) => {
- // Content ids are 6 random characters from [A-Za-z0-9_-] (legacy ids can contain a hyphen, e.g. builtin_text-B9-Fem).
+    // Content ids are 6 random characters from [A-Za-z0-9_-] (legacy ids can contain a hyphen, e.g. builtin_text-B9-Fem).
     let out = s.replace(/(builtin_[a-z-]+?)-[A-Za-z0-9_-]{6}(?![A-Za-z0-9_-])/g, '$1-<rand>')
     for (const r of randomIds) out = out.split(r).join('<rid>')
     return out
@@ -160,14 +161,14 @@ export function normalize(flows: Flow[], fixture: { ids: Set<string>; names: Set
 
   return sorted.map((f) => {
     const flow = scrub({ ...f, name: files.get(f.name) ?? f.name }) as Record<string, unknown>
- // ui links are a set: the order legacy writes them in follows its diagram model, not the flow. Compared sorted.
+    // ui links are a set: the order legacy writes them in follows its diagram model, not the flow. Compared sorted.
     if (Array.isArray(flow.links)) {
       flow.links = [...(flow.links as unknown[])].sort((x, y) => (JSON.stringify(x) < JSON.stringify(y) ? -1 : 1))
     }
- // Generated node coordinates: keep the grid check, drop the value. Fixture nodes keep theirs.
+    // Generated node coordinates: keep the grid check, drop the value. Fixture nodes keep theirs.
     flow.nodes = (f.nodes as FlowNode[]).map((n, i) => {
       const scrubbed = (flow.nodes as Record<string, unknown>[])[i]
- // Moved fixture nodes: the value is checked on the grid by the scenario, not compared (see dragNodeBy).
+      // Moved fixture nodes: the value is checked on the grid by the scenario, not compared (see dragNodeBy).
       if (layoutOnly.has(n.name)) {
         const { x: _lx, y: _ly, ...rest } = scrubbed
         return rest
@@ -215,7 +216,7 @@ export async function dragNodeBy(page: { mouse: { move(x: number, y: number, o?:
     const residualX = dxPx - movedX
     const residualY = dyPx - movedY
     if (Math.abs(residualX) < 1 && Math.abs(residualY) < 1) return
- // Next pass: drag the leftover from the node's new place.
+    // Next pass: drag the leftover from the node's new place.
     before = after
     from.x += movedX
     from.y += movedY
@@ -284,7 +285,7 @@ export function contentDelta(before: unknown, after: unknown) {
 }
 
 /**
- * Exports the whole bot (`GET.../bots/<id>/export`, a tar.gz) and unpacks it in memory.
+ * Exports the whole bot (`GET .../bots/<id>/export`, a tar.gz) and unpacks it in memory.
  * Returns path -> bytes for every entry.
  */
 export async function exportBot(s: Session): Promise<Map<string, Buffer>> {

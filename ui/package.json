@@ -28,6 +28,7 @@
     "@xyflow/react": "^12.12.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "elkjs": "0.12.0",
     "lucide-react": "^1.71.0",
     "monaco-editor": "^0.57.0",
     "react": "^19.3.1",

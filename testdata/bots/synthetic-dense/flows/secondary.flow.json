@@ -1,0 +1,679 @@
+{
+  "version": "0.0.1",
+  "catchAll": {},
+  "startNode": "entry",
+  "nodes": [
+    {
+      "id": "d-secondary-0",
+      "name": "entry",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n1"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "secondary-n27"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-1",
+      "name": "secondary-n1",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n2"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "secondary-n27"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-2",
+      "name": "secondary-n2",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n3"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "secondary-n2"
+        },
+        {
+          "condition": "event.payload.text === \"k1\"",
+          "node": "secondary-n19"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-3",
+      "name": "secondary-n3",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n4"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-4",
+      "name": "secondary-n4",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n5"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-5",
+      "name": "secondary-n5",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n6"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "secondary-n2"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-6",
+      "name": "secondary-n6",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n7"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "secondary-n22"
+        },
+        {
+          "condition": "event.payload.text === \"k1\"",
+          "node": "secondary-n19"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-7",
+      "name": "secondary-n7",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n8"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "secondary-n20"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-8",
+      "name": "secondary-n8",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n9"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "secondary-n5"
+        },
+        {
+          "condition": "event.payload.text === \"k1\"",
+          "node": "secondary-n26"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-9",
+      "name": "secondary-n9",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n10"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "END"
+        },
+        {
+          "condition": "event.payload.text === \"k1\"",
+          "node": "END"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-10",
+      "name": "secondary-n10",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n11"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-11",
+      "name": "secondary-n11",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n12"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "END"
+        },
+        {
+          "condition": "event.payload.text === \"k1\"",
+          "node": "secondary-n14"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-12",
+      "name": "secondary-n12",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n13"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "secondary-n16"
+        },
+        {
+          "condition": "event.payload.text === \"k1\"",
+          "node": "secondary-n4"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-13",
+      "name": "secondary-n13",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n14"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "END"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-14",
+      "name": "secondary-n14",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n15"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-15",
+      "name": "secondary-n15",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n16"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "secondary-n13"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-16",
+      "name": "secondary-n16",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n17"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "secondary-n26"
+        },
+        {
+          "condition": "event.payload.text === \"k1\"",
+          "node": "END"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-17",
+      "name": "secondary-n17",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n18"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "secondary-n7"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-18",
+      "name": "secondary-n18",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n19"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "secondary-n2"
+        },
+        {
+          "condition": "event.payload.text === \"k1\"",
+          "node": "secondary-n3"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-19",
+      "name": "secondary-n19",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n20"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "END"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-20",
+      "name": "secondary-n20",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n21"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "entry"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-21",
+      "name": "secondary-n21",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n22"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "END"
+        },
+        {
+          "condition": "event.payload.text === \"k1\"",
+          "node": "secondary-n1"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-22",
+      "name": "secondary-n22",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n23"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "secondary-n22"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-23",
+      "name": "secondary-n23",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n24"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "secondary-n18"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-24",
+      "name": "secondary-n24",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n25"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "secondary-n21"
+        },
+        {
+          "condition": "event.payload.text === \"k1\"",
+          "node": "secondary-n2"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-25",
+      "name": "secondary-n25",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n26"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "secondary-n13"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-26",
+      "name": "secondary-n26",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n27"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-27",
+      "name": "secondary-n27",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n28"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-28",
+      "name": "secondary-n28",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "secondary-n29"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-secondary-29",
+      "name": "secondary-n29",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "END"
+        },
+        {
+          "condition": "event.payload.text === \"k1\"",
+          "node": "END"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    }
+  ]
+}

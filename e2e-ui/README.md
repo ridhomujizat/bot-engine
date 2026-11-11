@@ -12,7 +12,7 @@ What `e2e-ui/run.sh` does:
 1. Starts a throwaway Postgres 16 on `:55432` in `$E2E_RUN_DIR` (default `$TMPDIR/bot-engine-e2e-ui`) and recreates `bots_e2e`.
 2. `e2e-ui/seed` creates the legacy tables (`srv_ghost_files`, `srv_ghost_index`, `strategy_default`), the engine tables, and one login `e2e@example.com` / `e2e-pass-123`.
 3. Builds the SPA (`ui/` -> `internal/web/dist`) and the server binary.
-4. Starts `bot-engine serve` on `:3917` with PG-backed bot content and imports `testdata/bots/synthetic-core` as bot `e2e-core` through the admin import API.
+4. Starts `bot-engine serve` on `:3917` with PG-backed bot content and imports `testdata/bots/synthetic-core` as bot `e2e-core` and `testdata/bots/synthetic-dense` as bot `e2e-dense` through the admin import API.
 5. Runs `pnpm exec playwright test` in `ui/`. Screenshots go to `$E2E_SHOTS` (default `$E2E_RUN_DIR/screenshots`).
 
 Everything is stopped on exit. Env overrides: `E2E_RUN_DIR`, `E2E_SHOTS`, `E2E_PG_PORT`, `E2E_PORT`. Extra args are passed to `playwright test` (for example `--grep "choice"`).
@@ -23,6 +23,8 @@ Execute code action, transition, drag-connect and hover-delete an edge, JSON vie
 emulator reply after the edit (proves the engine reloads the saved flow), code editor edit and
 reload, export `.tgz` and import as a new id, media upload in an image form, choice skill
 insert/wire/emulator click.
+
+`ui/e2e/tidy.spec.ts` runs on the dense bot `e2e-dense` (36 and 30 overlapping nodes): the overlap hint, Fix overlaps and Auto-arrange leave no overlap, one undo step restores the layout, and the flow file is unchanged afterwards.
 
 Assertions read the stored bytes straight from `srv_ghost_files` via `psql` (`E2E_DSN`) and the
 public studio API.

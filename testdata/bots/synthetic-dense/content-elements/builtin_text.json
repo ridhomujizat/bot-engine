@@ -1,0 +1,14 @@
+[
+  {
+    "id": "builtin_text-dense-a",
+    "formData": {
+      "text$en": "Dense flow message A"
+    }
+  },
+  {
+    "id": "builtin_text-dense-b",
+    "formData": {
+      "text$en": "Dense flow message B"
+    }
+  }
+]

@@ -1,0 +1,17 @@
+{
+  "id": "synthetic-parity",
+  "name": "synthetic-parity",
+  "description": "Synthetic fixture for the editor data-parity runner (make e2e-parity): a small main flow, a choice skill and the nodes the scenarios name.",
+  "disabled": false,
+  "defaultLanguage": "en",
+  "languages": [
+    "en"
+  ],
+  "dialog": {
+    "timeoutInterval": "5m",
+    "sessionTimeoutInterval": "30m"
+  },
+  "converse": {
+    "maxMessageLength": 50
+  }
+}

@@ -1,0 +1,811 @@
+{
+  "version": "0.0.1",
+  "catchAll": {},
+  "startNode": "entry",
+  "nodes": [
+    {
+      "id": "d-main-0",
+      "name": "entry",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n1"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "main-n25"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-1",
+      "name": "main-n1",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n2"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "END"
+        },
+        {
+          "condition": "event.payload.text === \"k1\"",
+          "node": "main-n6"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-2",
+      "name": "main-n2",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n3"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "main-n32"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-3",
+      "name": "main-n3",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n4"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-4",
+      "name": "main-n4",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n5"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-5",
+      "name": "main-n5",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n6"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-6",
+      "name": "main-n6",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n7"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "main-n15"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-7",
+      "name": "main-n7",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n8"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-8",
+      "name": "main-n8",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n9"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "main-n7"
+        },
+        {
+          "condition": "event.payload.text === \"k1\"",
+          "node": "main-n3"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-9",
+      "name": "main-n9",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n10"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "main-n3"
+        },
+        {
+          "condition": "event.payload.text === \"k1\"",
+          "node": "main-n2"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-10",
+      "name": "main-n10",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n11"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "main-n18"
+        },
+        {
+          "condition": "event.payload.text === \"k1\"",
+          "node": "main-n34"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-11",
+      "name": "main-n11",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n12"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-12",
+      "name": "main-n12",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n13"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "main-n11"
+        },
+        {
+          "condition": "event.payload.text === \"k1\"",
+          "node": "END"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-13",
+      "name": "main-n13",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n14"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "main-n23"
+        },
+        {
+          "condition": "event.payload.text === \"k1\"",
+          "node": "END"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-14",
+      "name": "main-n14",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n15"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "END"
+        },
+        {
+          "condition": "event.payload.text === \"k1\"",
+          "node": "END"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-15",
+      "name": "main-n15",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n16"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-16",
+      "name": "main-n16",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n17"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "main-n27"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-17",
+      "name": "main-n17",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n18"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "main-n29"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-18",
+      "name": "main-n18",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n19"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "main-n5"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-19",
+      "name": "main-n19",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n20"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "main-n5"
+        },
+        {
+          "condition": "event.payload.text === \"k1\"",
+          "node": "main-n33"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-20",
+      "name": "main-n20",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n21"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "main-n28"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-21",
+      "name": "main-n21",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n22"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "main-n4"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-22",
+      "name": "main-n22",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n23"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-23",
+      "name": "main-n23",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n24"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "main-n21"
+        },
+        {
+          "condition": "event.payload.text === \"k1\"",
+          "node": "main-n15"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-24",
+      "name": "main-n24",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n25"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "END"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-25",
+      "name": "main-n25",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n26"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "END"
+        },
+        {
+          "condition": "event.payload.text === \"k1\"",
+          "node": "main-n20"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-26",
+      "name": "main-n26",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n27"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "main-n31"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-27",
+      "name": "main-n27",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n28"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "main-n4"
+        },
+        {
+          "condition": "event.payload.text === \"k1\"",
+          "node": "main-n17"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-28",
+      "name": "main-n28",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n29"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "main-n4"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-29",
+      "name": "main-n29",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n30"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-30",
+      "name": "main-n30",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n31"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "main-n28"
+        },
+        {
+          "condition": "event.payload.text === \"k1\"",
+          "node": "main-n12"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-31",
+      "name": "main-n31",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n32"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "main-n29"
+        },
+        {
+          "condition": "event.payload.text === \"k1\"",
+          "node": "main-n7"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-32",
+      "name": "main-n32",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n33"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "END"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-33",
+      "name": "main-n33",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n34"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "main-n15"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-34",
+      "name": "main-n34",
+      "onEnter": [
+        "say #!builtin_text-dense-a"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.text === \"next\"",
+          "node": "main-n35"
+        },
+        {
+          "condition": "event.payload.text === \"k0\"",
+          "node": "main-n31"
+        },
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    },
+    {
+      "id": "d-main-35",
+      "name": "main-n35",
+      "onEnter": [
+        "say #!builtin_text-dense-b"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "true",
+          "node": "END"
+        }
+      ]
+    }
+  ]
+}
