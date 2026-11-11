@@ -91,18 +91,26 @@ function browserStorage(): Storage | null {
 
 const TRIGGER_RE = /event\.(?:preview|payload\.text)\s*===?\s*(['"])(.+?)\1/g
 
+export const MAIN_FLOW = 'main.flow.json'
+/** Quick-start chips shown at most, however many triggers the flows have. */
+export const QUICK_START_LIMIT = 6
+
 /**
- * Literal trigger texts from the start node's transitions, in order (for example
- * `event.preview == 'start'`). Other flows' start nodes follow, so the main flow's triggers lead.
+ * Quick-start chips: literal trigger texts from the start node of the main flow and of the flow
+ * open in the editor (for example `event.preview == 'start'`). Main flow first, no duplicates, at
+ * most `limit`. Other flows' start nodes are not used.
  */
-export function triggerTexts(flows: FlowView[]): string[] {
-  const ordered = [...flows].sort((a, b) => Number(b.name === 'main.flow.json') - Number(a.name === 'main.flow.json'))
+export function quickStartTriggers(flows: FlowView[], openFlow: string | undefined, limit = QUICK_START_LIMIT): string[] {
+  const wanted = flows
+    .filter((f) => f.name === MAIN_FLOW || (openFlow !== undefined && f.name === openFlow))
+    .sort((a, b) => Number(b.name === MAIN_FLOW) - Number(a.name === MAIN_FLOW))
   const out: string[] = []
-  for (const flow of ordered) {
- // legacy files name the start node; the canvas may key it by id. Accept either.
+  for (const flow of wanted) {
+    // legacy files name the start node; the canvas may key it by id. Accept either.
     const start = flow.nodes.find((n) => n.name === flow.startNode || n.id === flow.startNode)
     for (const t of start?.next ?? []) {
       for (const m of t.condition.matchAll(TRIGGER_RE)) {
+        if (out.length >= limit) return out
         if (!out.includes(m[2])) out.push(m[2])
       }
     }

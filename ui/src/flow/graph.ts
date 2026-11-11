@@ -4,6 +4,8 @@ import { destinationLabel, parseDestination } from './actions'
 import type { FlowDoc } from './model'
 import { idByName } from './model'
 import type { EdgeStyle } from './edgeStyle'
+import { parseFlowTarget, type FlowTarget } from './navigation'
+import type { RunEdgeState } from './runPath'
 import {
   COLUMN_GAP,
   EDGE_LANE_STEP,
@@ -28,6 +30,8 @@ export interface StandardNodeData extends Record<string, unknown> {
 export interface TerminalNodeData extends Record<string, unknown> {
   label: string
   icon: 'flow' | 'return' | 'end'
+  /** The flow (and node) this pill opens. Null for return, END and unresolved targets. */
+  target: FlowTarget | null
 }
 
 export interface StepEdgeData extends Record<string, unknown> {
@@ -39,6 +43,8 @@ export interface StepEdgeData extends Record<string, unknown> {
   /** Drawing style, set by the canvas from the user's choice (not saved). */
   style?: EdgeStyle
   onRun: boolean
+  /** Run-path state of this transition: `recent` animates, `past` is static green. */
+  run?: RunEdgeState
   highlight: boolean
 }
 
@@ -54,8 +60,10 @@ export function terminalId(sourceId: string, index: number): string {
 export interface GraphInput {
   doc: FlowDoc
   contentLabels: Record<string, string>
-  /** Node ids on the emulator's run path. Edges between two of them are drawn green. */
+  /** Node ids on the emulator's run path. Nodes on it are drawn green. */
   runPath: ReadonlySet<string>
+  /** Transitions taken on the run path (edge id to state). Drawn green; `recent` is animated. */
+  runEdges?: ReadonlyMap<string, RunEdgeState>
 }
 
 /** Where auto-placed nodes start: the top-left of the flow, or right of the stored nodes. */
@@ -76,7 +84,7 @@ function originFor(stored: Record<string, Point2>): Point2 {
  * ends are real (a node input port or a terminal pill). An edge without resolved, finite
  * endpoints is not emitted.
  */
-export function toGraph({ doc, contentLabels, runPath }: GraphInput): { nodes: FlowRFNode[]; edges: FlowRFEdge[] } {
+export function toGraph({ doc, contentLabels, runPath, runEdges }: GraphInput): { nodes: FlowRFNode[]; edges: FlowRFEdge[] } {
   const names = idByName(doc)
   const byId = new Map(doc.nodes.map((n) => [n.id, n]))
   const countsOf = (node: FlowNodeJson) => ({
@@ -136,6 +144,7 @@ export function toGraph({ doc, contentLabels, runPath }: GraphInput): { nodes: F
       const nodeTarget = dest.kind === 'node' && byId.has(dest.nodeId) ? dest.nodeId : null
       const terminalLabel = nodeTarget === null ? (dest.kind === 'node' ? transition.node : destinationLabel(dest)) : null
       const icon = dest.kind === 'return' ? 'return' : dest.kind === 'end' ? 'end' : 'flow'
+      const flowTarget = dest.kind === 'flow' ? parseFlowTarget(transition.node) : null
 
       const target = nodeTarget ?? terminalId(node.id, index)
       const targetPos: Point2 =
@@ -155,14 +164,16 @@ export function toGraph({ doc, contentLabels, runPath }: GraphInput): { nodes: F
           id: target,
           type: 'terminal',
           position: { x: targetPos.x, y: targetPos.y },
-          data: { label: terminalLabel, icon },
+          data: { label: terminalLabel, icon, target: flowTarget },
           draggable: false,
           selectable: false,
         })
       }
 
+      const edgeId = `${node.id}:${index}`
+      const run = runEdges?.get(edgeId)
       edges.push({
-        id: `${node.id}:${index}`,
+        id: edgeId,
         type: 'step',
         source: node.id,
         sourceHandle: `t${index}`,
@@ -174,7 +185,8 @@ export function toGraph({ doc, contentLabels, runPath }: GraphInput): { nodes: F
           index,
           lane: index,
           routeY,
-          onRun: runPath.has(node.id) && dest.kind === 'node' && runPath.has(dest.nodeId),
+          onRun: run !== undefined,
+          run,
           highlight: false,
         },
       })

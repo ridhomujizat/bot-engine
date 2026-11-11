@@ -1,7 +1,7 @@
 import { test, expect, type Page, type Locator } from '@playwright/test'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { BASE, BOT, EMAIL, PASSWORD, SHOTS, api, botApi, botFile, botFileHashes, botFileList, flowJson, shot, signIn } from './support'
+import { BASE, BOT, EMAIL, PASSWORD, SHOTS, api, botApi, botFile, botFileHashes, botFileList, chooseOption, flowJson, shot, signIn } from './support'
 
 // One serial journey through the real backend. Later steps depend on earlier ones.
 test.describe.configure({ mode: 'serial' })
@@ -131,9 +131,9 @@ test('add an Execute code action and pick an action with parameters', async ({ p
   await nodeNamed(page, 'promo').click()
   await page.getByRole('button', { name: 'Add action', exact: true }).click()
   await page.getByRole('radio', { name: 'Execute code' }).click()
- // Native builtins are offered alongside the bot's own actions.
-  await page.locator('#action-name').selectOption('builtin/setVariable')
- // Declared parameters come pre-filled as rows: type, name, value.
+  // Native builtins are offered alongside the bot's own actions.
+  await chooseOption(page, page.locator('#action-name'), 'builtin/setVariable')
+  // Declared parameters come pre-filled as rows: type, name, value.
   await expect(page.getByLabel('Parameter name')).toHaveCount(3)
   await page.getByLabel('Parameter value').nth(0).fill('temp')
   await page.getByLabel('Parameter value').nth(1).fill('e2e_flag')
@@ -155,7 +155,7 @@ test('add a transition (always) from an existing node to the new node', async ({
   await expect(page.getByRole('dialog')).toBeVisible()
   await page.getByRole('radio', { name: 'Always' }).click()
   await page.getByRole('radio', { name: 'Transition to node' }).click()
-  await page.getByLabel('Target node').selectOption('promo')
+  await chooseOption(page, page.getByRole('combobox', { name: 'Target node', exact: true }), 'promo', { exact: true })
   await page.getByRole('button', { name: 'Add', exact: true }).click()
   await expect(page.getByRole('dialog')).toBeHidden()
   await waitSaved(page)
@@ -223,6 +223,10 @@ test('emulator: reply after the edit is the new content, state and reset work', 
   await openFlow(page, '?emulator=1')
   const panel = page.locator('aside').filter({ has: page.getByRole('button', { name: 'Reset emulator session' }) })
   await expect(panel).toBeVisible()
+  // Follow conversation (on by default) would open skills/sub.flow.json after the subflow reply; this test checks main's canvas.
+  await panel.getByLabel('Follow conversation').click()
+  // The details drawer is collapsed by default: open it on State before reading values.
+  await panel.getByRole('tab', { name: 'State' }).click()
   userIdBefore = (await panel.locator('span').filter({ hasText: /^userId$/ }).locator('xpath=following-sibling::span[2]').textContent()) ?? ''
   const message = panel.getByRole('textbox', { name: 'Message', exact: true })
   const send = panel.getByRole('button', { name: 'Send message', exact: true })
@@ -309,7 +313,7 @@ test('media upload in an image content form stores the file and the URL', async 
   await nodeNamed(page, JSON_NAME).click()
   await page.getByRole('button', { name: 'Add action', exact: true }).click()
   await page.getByRole('radio', { name: 'Say something' }).click()
-  await page.locator('#content-type').selectOption('builtin_image')
+  await chooseOption(page, page.locator('#content-type'), 'Image', { exact: true })
   const uploadResponse = page.waitForResponse((r) => r.url().includes('/media') && r.request().method() === 'POST')
   await page.locator('input[type=file]').setInputFiles({ name: 'e2e.png', mimeType: 'image/png', buffer: PNG })
   const res = await uploadResponse
@@ -349,8 +353,7 @@ test('choice skill: insert a choice node, wire it, pick an option in the emulato
   const box = (await canvas.boundingBox())!
   await page.getByText('Choice', { exact: true }).first().dragTo(canvas, { targetPosition: { x: box.width * 0.3, y: box.height * 0.8 } })
   await expect(page.getByRole('dialog', { name: 'Choice skill' })).toBeVisible()
-  const questionValue = await page.locator('#choice-question option', { hasText: 'Pilih layanan' }).first().getAttribute('value')
-  await page.locator('#choice-question').selectOption(questionValue ?? '')
+  await chooseOption(page, page.locator('#choice-question'), 'Pilih layanan')
   await shot(page, 'choice-dialog')
   await page.getByRole('button', { name: 'Insert', exact: true }).click()
   await expect(page.getByRole('dialog', { name: 'Choice skill' })).toBeHidden()
@@ -358,7 +361,8 @@ test('choice skill: insert a choice node, wire it, pick an option in the emulato
 
  // Wire the renamed promo node -> the new choice node.
   const skillNode = await page.getByLabel('Node name').inputValue()
-  await nodeNamed(page, JSON_NAME).click()
+  // Click the header: the card body is made of action rows, and a row click opens that action's dialog.
+  await nodeNamed(page, JSON_NAME).locator('span.truncate').first().click()
   await page.getByRole('tab', { name: 'Transitions' }).click()
  // Earlier tests may have added transitions here, and the emulator takes the first match: clear them first.
   while ((await page.locator('aside').getByRole('button', { name: 'Delete transition' }).count()) > 0) {
@@ -367,7 +371,7 @@ test('choice skill: insert a choice node, wire it, pick an option in the emulato
   await page.getByRole('button', { name: 'Add transition' }).click()
   await page.getByRole('radio', { name: 'Always' }).click()
   await page.getByRole('radio', { name: 'Transition to node' }).click()
-  await page.getByLabel('Target node').selectOption(skillNode)
+  await chooseOption(page, page.getByRole('combobox', { name: 'Target node', exact: true }), skillNode, { exact: true })
   await page.getByRole('button', { name: 'Add', exact: true }).click()
   await expect(page.getByRole('dialog')).toBeHidden()
   await waitSaved(page)

@@ -1,3 +1,4 @@
+import { moveItem } from './reorder'
 import type { CatchAll, FlowJson, FlowNodeJson, FlowView, Point, Transition, UiJson, UiLink } from '@/api/types'
 
 /**
@@ -286,4 +287,26 @@ export function uniqueNodeName(doc: FlowDoc, base: string): string {
   let n = 2
   while (taken.has(`${base}-${n}`)) n++
   return `${base}-${n}`
+}
+
+/**
+ * Moves one action of an on enter / on receive list, or one transition, inside a node (drag or
+ * keyboard reorder). A move that changes nothing returns the document itself, so it adds no undo step.
+ */
+export function moveNodeItem(doc: FlowDoc, id: string, field: 'onEnter' | 'onReceive' | 'next', from: number, to: number): FlowDoc {
+  const node = findNode(doc, id)
+  const list = node?.[field]
+  if (!node || !list) return doc
+  const next = moveItem<unknown>(list, from, to) as typeof list
+  if (next.every((item, i) => item === list[i])) return doc
+  return updateNode(doc, id, (n) => ({ ...n, [field]: next }))
+}
+
+/** Moves one flow-wide action or transition (the catch-all list). Same no-op rule as moveNodeItem. */
+export function moveCatchAllItem(doc: FlowDoc, field: 'onReceive' | 'next', from: number, to: number): FlowDoc {
+  const list = catchAllOf(doc)[field]
+  if (!list) return doc
+  const next = moveItem<unknown>(list, from, to) as typeof list
+  if (next.every((item, i) => item === list[i])) return doc
+  return updateCatchAll(doc, (c) => ({ ...c, [field]: next }))
 }

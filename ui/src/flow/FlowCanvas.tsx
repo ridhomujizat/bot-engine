@@ -27,6 +27,7 @@ import type { Point } from '@/api/types'
 import { cn } from '@/lib/utils'
 import type { EdgeStyle } from './edgeStyle'
 import { objectsOf, overlappingIds, sizesOf, tidyPositions, type TidyMode } from './tidy'
+import { NODE_W } from './layout'
 
 const EDGE_STYLE_OPTIONS: Array<{ value: EdgeStyle; label: string }> = [
   { value: 'straight', label: 'Straight' },
@@ -80,6 +81,9 @@ export interface CanvasProps {
   /** A node the page wants selected once it exists (a node just dropped or created). */
   selectRequest: string | null
   onSelectRequestDone: () => void
+  /** A node to bring to the middle of the view (a flow opened on one of its nodes). */
+  centerRequest?: string | null
+  onCenterDone?: () => void
   /** The overlap hint was closed for this flow. */
   hintDismissed: boolean
   onDismissHint: () => void
@@ -102,9 +106,21 @@ export function FlowCanvas(props: CanvasProps) {
   )
 }
 
-function Canvas({ nodes, edges, selectRequest, onSelectRequestDone, hintDismissed, onDismissHint, edgeStyle, onEdgeStyleChange, handlers }: CanvasProps) {
+function Canvas({
+  nodes,
+  edges,
+  selectRequest,
+  onSelectRequestDone,
+  centerRequest = null,
+  onCenterDone,
+  hintDismissed,
+  onDismissHint,
+  edgeStyle,
+  onEdgeStyleChange,
+  handlers,
+}: CanvasProps) {
   const [rfNodes, setRfNodes, onNodesChange] = useNodesState<FlowRFNode>(nodes)
-  const { screenToFlowPosition, zoomIn, zoomOut, fitView, getNodes } = useReactFlow()
+  const { screenToFlowPosition, zoomIn, zoomOut, fitView, getNodes, getNode, setCenter, getZoom } = useReactFlow()
   const zoom = useStore((s) => Math.round(s.transform[2] * 100))
   const [tidyOpen, setTidyOpen] = useState(false)
   // Overlaps as drawn: the live nodes carry React Flow's measured sizes once rendered (estimates before).
@@ -135,6 +151,18 @@ function Canvas({ nodes, edges, selectRequest, onSelectRequestDone, hintDismisse
     ])
     onSelectRequestDone()
   }, [nodes, selectRequest, rfNodes, onNodesChange, onSelectRequestDone])
+
+  // Centres a requested node once it is drawn: keeps the zoom, moves the view to the node's middle.
+  useEffect(() => {
+    if (!centerRequest || !rfNodes.some((n) => n.id === centerRequest)) return
+    const node = getNode(centerRequest)
+    if (node) {
+      const width = node.measured?.width ?? NODE_W
+      const height = node.measured?.height ?? 120
+      void setCenter(node.position.x + width / 2, node.position.y + height / 2, { zoom: Math.max(getZoom(), 0.75), duration: 300 })
+    }
+    onCenterDone?.()
+  }, [centerRequest, rfNodes, getNode, setCenter, getZoom, onCenterDone])
 
   /**
    * One tidy action is one page edit, so one undo step. The view fits once the moved nodes are drawn.
@@ -213,7 +241,16 @@ function Canvas({ nodes, edges, selectRequest, onSelectRequestDone, hintDismisse
   }
 
   return (
-    <FlowActionsContext.Provider value={handlers}>
+    <FlowActionsContext.Provider
+      value={{
+        ...handlers,
+        // A row click right after a drag of the node is the drag's end, not a click: same window as the node click.
+        openNodeTarget: (nodeId, target) => {
+          if (Date.now() - lastDragEnd.current < DRAG_CLICK_WINDOW_MS) return
+          handlers.openNodeTarget(nodeId, target)
+        },
+      }}
+    >
       <div
         className="relative h-full w-full"
         onDragOver={(e) => e.preventDefault()}
@@ -282,30 +319,6 @@ function Canvas({ nodes, edges, selectRequest, onSelectRequestDone, hintDismisse
           proOptions={{ hideAttribution: true }}
         >
           <Background variant={BackgroundVariant.Dots} gap={24} size={1.5} color="#D4D4D8" />
-          {overlapCount > 0 && !hintDismissed && (
-            <Panel position="bottom-center" className="flex items-center gap-2 rounded-full border border-border bg-background py-1 pr-1 pl-3 text-xs shadow-md">
-              <div role="status" className="flex items-center gap-2">
-                <span>
-                  {overlapCount} {overlapCount === 1 ? 'node overlaps' : 'nodes overlap'} —
-                </span>
-                <button
-                  type="button"
-                  onClick={() => void runTidy('fix', false)}
-                  className="rounded-full bg-primary px-2.5 py-0.5 font-medium text-primary-foreground hover:opacity-90"
-                >
-                  Fix overlaps
-                </button>
-              </div>
-              <button
-                type="button"
-                aria-label="Dismiss"
-                onClick={onDismissHint}
-                className="flex size-6 items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
-              >
-                ×
-              </button>
-            </Panel>
-          )}
           <Panel position="top-left" className="flex w-[116px] flex-col gap-1.5 rounded-xl border border-border bg-background p-2 shadow-md">
             <span className="px-1 text-[11px] font-medium text-muted-foreground">Drag to add</span>
             <PaletteItem kind="standard" label="Node" icon={<Square className="size-2.5 text-white" />} tile="bg-primary" />
@@ -363,6 +376,33 @@ function Canvas({ nodes, edges, selectRequest, onSelectRequestDone, hintDismisse
             </div>
           </Panel>
         </ReactFlow>
+        {/* Under the flow-wide pill at the top centre. Click-through except the pill itself, so nodes stay usable. */}
+        {overlapCount > 0 && !hintDismissed && (
+          <div className="pointer-events-none absolute inset-x-0 top-12 z-10 flex justify-center">
+            <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-border bg-background py-1 pr-1 pl-3 text-xs shadow-md">
+              <div role="status" className="flex items-center gap-2">
+                <span>
+                  {overlapCount} {overlapCount === 1 ? 'node overlaps' : 'nodes overlap'} —
+                </span>
+                <button
+                  type="button"
+                  onClick={() => void runTidy('fix', false)}
+                  className="rounded-full bg-primary px-2.5 py-0.5 font-medium text-primary-foreground hover:opacity-90"
+                >
+                  Fix overlaps
+                </button>
+              </div>
+              <button
+                type="button"
+                aria-label="Dismiss"
+                onClick={onDismissHint}
+                className="flex size-6 items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </FlowActionsContext.Provider>
   )

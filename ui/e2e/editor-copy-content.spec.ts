@@ -74,8 +74,7 @@ test('paste copies the content: editing the copy leaves the original element unc
  // Edit the copy's text through the inspector.
   await page.getByRole('button', { name: 'Edit action' }).first().click()
   dialog = page.getByRole('dialog')
- // An existing say action opens on "Pick existing"; the text is edited on "Create new", which saves the element it names.
-  await dialog.getByRole('tab', { name: 'Create new' }).click()
+  // An existing say action opens with its element's form: the text is edited there and saved to that element.
   await dialog.locator('textarea').first().fill('teks copy')
   await dialog.getByRole('button', { name: 'Save action' }).click()
   await expect(dialog).toBeHidden()

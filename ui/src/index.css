@@ -105,3 +105,31 @@ body {
 .monaco-wrap .overflow-guard {
   border-radius: 0;
 }
+
+/*
+ * Emulator run path: the transitions the conversation took are dashed and move along their direction.
+ * The newest step moves faster and thicker. Reduced motion keeps the green colour and drops the movement.
+ */
+.run-edge {
+  stroke-dasharray: 6 5;
+  animation: run-edge-flow 1.6s linear infinite;
+}
+
+.run-edge-recent {
+  stroke-dasharray: 9 6;
+  animation-duration: 0.8s;
+}
+
+@keyframes run-edge-flow {
+  to {
+    stroke-dashoffset: -11;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .run-edge,
+  .run-edge-recent {
+    animation: none;
+    stroke-dasharray: none;
+  }
+}

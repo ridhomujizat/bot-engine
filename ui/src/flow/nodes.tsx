@@ -1,8 +1,10 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react'
-import { Code2, GripVertical, MessageSquare, Play, Square, Undo2, Workflow, Zap } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { ArrowUpRight, Code2, GripVertical, MessageSquare, Play, Square, Undo2, Workflow, Zap } from 'lucide-react'
+import type { CSSProperties, ReactNode } from 'react'
 import type { FlowNodeJson } from '@/api/types'
-import { codeSummary, parseNodeAction, transitionLabel } from './actions'
+import { transitionLabel } from './actions'
+import { describeAction } from './preview'
+import { useFlowActions } from './flowActions'
 import type { StandardNodeData, TerminalNodeData, FlowRFNode } from './graph'
 import {
   GAP,
@@ -31,52 +33,108 @@ function countsOf(node: FlowNodeJson) {
   }
 }
 
-/** Action row: a coloured kind chip plus the action label, in a fixed-height pill. */
-function ActionPill({ raw, contentLabels }: { raw: string; contentLabels: Record<string, string> }) {
-  const action = parseNodeAction(raw)
-  const kind = action.kind === 'say' ? 'say' : 'code'
-  const { Icon, fg, bg } = KIND[kind]
-  const text =
-    action.kind === 'say' ? (contentLabels[action.contentId] ?? action.contentId) : codeSummary(action.name, action.args).pill
+/** A clickable row inside a node card: a press that moves the node is a drag and is handled by the canvas. */
+function ClickRow({
+  label,
+  title,
+  onOpen,
+  className,
+  style,
+  children,
+}: {
+  label: string
+  title: string
+  onOpen: () => void
+  className: string
+  style: CSSProperties
+  children: ReactNode
+}) {
   return (
     <div
-      className="flex items-center gap-2 rounded-[7px] border border-border bg-canvas pr-2.5 pl-1"
-      style={{ height: PILL_H }}
-      title={raw}
+      role="button"
+      tabIndex={0}
+      aria-label={label}
+      title={title}
+      onClick={(e) => {
+        e.stopPropagation()
+        onOpen()
+      }}
+      onKeyDown={(e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return
+        e.preventDefault()
+        onOpen()
+      }}
+      className={cn(
+        'cursor-pointer outline-none transition-colors hover:border-primary/50 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring',
+        className,
+      )}
+      style={style}
     >
-      <span className={cn('flex size-[18px] shrink-0 items-center justify-center rounded-[5px]', bg)}>
-        <Icon className={cn('size-2.5', fg)} />
-      </span>
-      <span className={cn('min-w-0 flex-1 truncate text-xs leading-4', kind === 'code' && 'font-mono-code text-[11px]')}>
-        {text}
-      </span>
+      {children}
     </div>
   )
 }
 
-/** A section always renders (legacy shows every section); an empty one shows a dashed placeholder row. */
-function Section({ title, children, rows, empty }: { title: string; children: ReactNode; rows: number; empty: string }) {
+/** Action row: a coloured kind chip plus a friendly label, in a fixed-height pill. Clicking it edits the action. */
+function ActionPill({ raw, nodeId, section, index, contentLabels }: {
+  raw: string
+  nodeId: string
+  section: 'onEnter' | 'onReceive'
+  index: number
+  contentLabels: Record<string, string>
+}) {
+  const { openNodeTarget } = useFlowActions()
+  const view = describeAction(raw, contentLabels)
+  const kind = view.kind === 'say' ? 'say' : 'code'
+  const { Icon, fg, bg } = KIND[kind]
+  return (
+    <ClickRow
+      label={`Open action ${view.full}`}
+      title={view.full}
+      onOpen={() => openNodeTarget(nodeId, { kind: 'action', section, index })}
+      className="flex items-center gap-2 rounded-[7px] border border-border bg-canvas pr-2.5 pl-1"
+      style={{ height: PILL_H }}
+    >
+      <span className={cn('flex size-[18px] shrink-0 items-center justify-center rounded-[5px]', bg)}>
+        <Icon className={cn('size-2.5', fg)} />
+      </span>
+      <span className={cn('min-w-0 flex-1 truncate text-xs leading-4', view.mono && 'font-mono-code text-[11px]')}>{view.label}</span>
+    </ClickRow>
+  )
+}
+
+/** A section always renders (the legacy editor shows every section); an empty one shows a dashed placeholder row. */
+function Section({ title, children, rows, empty, onEmpty }: {
+  title: string
+  children: ReactNode
+  rows: number
+  empty: string
+  onEmpty: () => void
+}) {
   return (
     <>
       <div className="bg-border" style={{ height: SEPARATOR_H }} />
-      <div className="flex flex-col" style={{ padding: `${SEC_T}px ${NODE_PAD}px ${SEC_B}px`, gap: GAP }}>
+      <div className="flex min-w-0 flex-col" style={{ padding: `${SEC_T}px ${NODE_PAD}px ${SEC_B}px`, gap: GAP }}>
         <div className="text-[11px] leading-4 font-medium text-muted-foreground" style={{ height: LBL_H }}>
           {title}
         </div>
-        {rows > 0 ? children : <EmptyRow text={empty} />}
+        {rows > 0 ? children : <EmptyRow text={empty} label={`${title}: ${empty}`} onOpen={onEmpty} />}
       </div>
     </>
   )
 }
 
-function EmptyRow({ text }: { text: string }) {
+function EmptyRow({ text, label, onOpen }: { text: string; label: string; onOpen: () => void }) {
   return (
-    <div
+    <ClickRow
+      label={label}
+      title={text}
+      onOpen={onOpen}
       className="flex items-center rounded-[7px] border border-dashed border-border px-2.5 text-[11px] text-muted-foreground"
       style={{ height: PILL_H }}
     >
-      {text}
-    </div>
+      <span className="truncate">{text}</span>
+    </ClickRow>
   )
 }
 
@@ -87,6 +145,7 @@ function NodeFrame({ data, selected, tile, subtitle, node }: {
   subtitle: string
   node: FlowNodeJson
 }) {
+  const { openNodeTarget } = useFlowActions()
   const counts = countsOf(node)
   const active = data.onRun
   const ring = selected ? 'border-primary' : active ? 'border-green' : 'border-border'
@@ -109,19 +168,42 @@ function NodeFrame({ data, selected, tile, subtitle, node }: {
         </div>
         <GripVertical className="size-3.5 shrink-0 text-ring" />
       </div>
-      <Section title="On enter" rows={counts.onEnter} empty="No actions. Add one in properties">
-        {node.onEnter?.map((raw, i) => <ActionPill key={`e${i}`} raw={raw} contentLabels={data.contentLabels} />)}
+      <Section
+        title="On enter"
+        rows={counts.onEnter}
+        empty="No actions. Add one in properties"
+        onEmpty={() => openNodeTarget(node.id, { kind: 'tab', tab: 'onEnter' })}
+      >
+        {node.onEnter?.map((raw, i) => (
+          <ActionPill key={`e${i}`} raw={raw} nodeId={node.id} section="onEnter" index={i} contentLabels={data.contentLabels} />
+        ))}
       </Section>
-      <Section title="On receive" rows={counts.onReceive} empty={node.onReceive == null ? 'Not waiting for user input' : 'Waiting. No actions yet'}>
-        {node.onReceive?.map((raw, i) => <ActionPill key={`r${i}`} raw={raw} contentLabels={data.contentLabels} />)}
+      <Section
+        title="On receive"
+        rows={counts.onReceive}
+        empty={node.onReceive == null ? 'Not waiting for user input' : 'Waiting. No actions yet'}
+        onEmpty={() => openNodeTarget(node.id, { kind: 'tab', tab: 'onReceive' })}
+      >
+        {node.onReceive?.map((raw, i) => (
+          <ActionPill key={`r${i}`} raw={raw} nodeId={node.id} section="onReceive" index={i} contentLabels={data.contentLabels} />
+        ))}
       </Section>
-      <Section title="Transitions" rows={counts.transitions} empty="No transitions. Add one in properties">
+      <Section
+        title="Transitions"
+        rows={counts.transitions}
+        empty="No transitions. Add one in properties"
+        onEmpty={() => openNodeTarget(node.id, { kind: 'tab', tab: 'transitions' })}
+      >
         {node.next.map((t, i) => {
           const always = t.condition === 'true' || t.condition === 'otherwise'
           const open = t.node === ''
+          const label = transitionLabel(t)
           return (
-            <div
+            <ClickRow
               key={i}
+              label={`Open transition ${label}`}
+              title={`${label}${t.node ? ` → ${t.node}` : ''}`}
+              onOpen={() => openNodeTarget(node.id, { kind: 'transition', index: i })}
               className="flex items-center gap-2 rounded-[7px] border border-border bg-background px-2.5"
               style={{ height: PILL_H }}
             >
@@ -131,10 +213,10 @@ function NodeFrame({ data, selected, tile, subtitle, node }: {
                   always && !t.caption ? 'font-medium text-muted-foreground' : t.caption ? 'font-medium' : 'font-mono-code text-[11px]',
                 )}
               >
-                {transitionLabel(t)}
+                {label}
               </span>
               {open && <span className="shrink-0 text-[10px] text-muted-foreground">not connected</span>}
-            </div>
+            </ClickRow>
           )
         })}
       </Section>
@@ -188,16 +270,50 @@ export function SkillNode({ data, selected }: NodeProps<FlowRFNode>) {
   )
 }
 
+/**
+ * Transition target that is not a node of this flow. A flow target opens that flow (click, or Enter
+ * on the focused pill); return and END have no fixed target and stay plain.
+ */
 export function TerminalNode({ data }: NodeProps<FlowRFNode>) {
   const d = data as TerminalNodeData
+  const { openFlow } = useFlowActions()
   const Icon = d.icon === 'return' ? Undo2 : d.icon === 'end' ? Square : Workflow
+  const target = d.target
+  const pillClass = 'nodrag nopan flex items-center gap-1.5 rounded-full border border-border bg-background pr-3 pl-2.5 text-xs font-medium text-muted-foreground shadow-sm'
+  if (!target) {
+    return (
+      <div className={pillClass} style={{ height: 28 }}>
+        <Icon className="size-3" />
+        <span className="max-w-[180px] truncate">{d.label}</span>
+        <Handle id="in" type="target" position={Position.Left} style={{ top: 14 }} />
+      </div>
+    )
+  }
   return (
     <div
-      className="flex items-center gap-1.5 rounded-full border border-border bg-background pr-3 pl-2.5 text-xs font-medium text-muted-foreground shadow-sm"
+      role="button"
+      tabIndex={0}
+      aria-label={`Open flow ${d.label}`}
+      title={`Open ${d.label}`}
+      onClick={(e) => {
+        e.stopPropagation()
+        openFlow(target)
+      }}
+      onKeyDown={(e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return
+        e.preventDefault()
+        e.stopPropagation()
+        openFlow(target)
+      }}
+      className={cn(
+        pillClass,
+        'group cursor-pointer pr-2.5 outline-none transition-colors hover:border-primary/50 hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring',
+      )}
       style={{ height: 28 }}
     >
       <Icon className="size-3" />
-      <span className="max-w-[180px] truncate">{d.label}</span>
+      <span className="max-w-[160px] truncate group-hover:underline group-hover:underline-offset-2">{d.label}</span>
+      <ArrowUpRight className="size-3 shrink-0 text-muted-foreground group-hover:text-foreground" aria-hidden />
       <Handle id="in" type="target" position={Position.Left} style={{ top: 14 }} />
     </div>
   )

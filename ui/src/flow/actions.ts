@@ -1,15 +1,21 @@
 import type { Transition } from '@/api/types'
 
-/** A node action string is either `say #!<contentId>` or `<action name> <JSON args>`. */
+/**
+ * A node action string is `say #!<contentId>` (optionally followed by JSON args, e.g.
+ * `{"skill":"choice"}`) or `<action name> <JSON args>`.
+ */
 export type NodeAction =
-  | { kind: 'say'; contentId: string }
+  | { kind: 'say'; contentId: string; args: string }
   | { kind: 'code'; name: string; args: string }
 
 const SAY_PREFIX = 'say #!'
 
 export function parseNodeAction(raw: string): NodeAction {
   if (raw.startsWith(SAY_PREFIX)) {
-    return { kind: 'say', contentId: raw.slice(SAY_PREFIX.length).trim() }
+    const body = raw.slice(SAY_PREFIX.length).trim()
+    const space = body.search(/\s/)
+    if (space === -1) return { kind: 'say', contentId: body, args: '' }
+    return { kind: 'say', contentId: body.slice(0, space), args: body.slice(space + 1).trim() }
   }
   const space = raw.indexOf(' ')
   if (space === -1) return { kind: 'code', name: raw, args: '' }
@@ -17,7 +23,10 @@ export function parseNodeAction(raw: string): NodeAction {
 }
 
 export function formatNodeAction(action: NodeAction): string {
-  if (action.kind === 'say') return `${SAY_PREFIX}${action.contentId}`
+  if (action.kind === 'say') {
+    const head = `${SAY_PREFIX}${action.contentId}`
+    return action.args ? `${head} ${action.args}` : head
+  }
   return action.args ? `${action.name} ${action.args}` : action.name
 }
 
@@ -67,23 +76,4 @@ export function destinationLabel(dest: Exclude<Destination, { kind: 'node' }>): 
     case 'flow':
       return dest.node ? `${dest.flow}#${dest.node}` : dest.flow
   }
-}
-
-/**
- * Short labels for a code action. The node card shows the name plus the variable it sets
- * ("builtin/setVariable sid"); the inspector shows the assignment ("session.sid =...").
- */
-export function codeSummary(name: string, args: string): { pill: string; detail: string | null } {
-  if (!args) return { pill: name, detail: null }
-  try {
-    const parsed = JSON.parse(args) as Record<string, unknown>
-    if (parsed && typeof parsed === 'object' && typeof parsed.name === 'string') {
-      const scope = typeof parsed.type === 'string' ? `${parsed.type}.` : ''
-      const value = typeof parsed.value === 'string' ? parsed.value : ''
-      return { pill: `${name} ${parsed.name}`, detail: `${scope}${parsed.name} = ${value}` }
-    }
-  } catch {
-    /* not JSON: show the raw arguments */
-  }
-  return { pill: name, detail: args }
 }

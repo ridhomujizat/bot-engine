@@ -26,3 +26,22 @@ export function RadioItem({
     </label>
   )
 }
+
+/** One option of a segmented control: a radio that looks like a tab (the checked one is raised). */
+export function SegmentItem({
+  className,
+  children,
+  ...props
+}: ComponentProps<typeof RadioGroupPrimitive.Item> & { children: ReactNode }) {
+  return (
+    <RadioGroupPrimitive.Item
+      className={cn(
+        'inline-flex h-7 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[5px] px-2.5 text-[13px] font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring data-[state=checked]:bg-background data-[state=checked]:text-foreground data-[state=checked]:shadow-sm',
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </RadioGroupPrimitive.Item>
+  )
+}

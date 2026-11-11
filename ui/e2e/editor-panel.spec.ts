@@ -1,5 +1,5 @@
 import { test, expect, type Locator, type Page } from '@playwright/test'
-import { BOT, api, botApi, signIn } from './support'
+import { BOT, api, botApi, chooseOption, signIn } from './support'
 
 // A new node is selected and its properties panel opens, whichever way it was created (legacy sets
 // currentFlowNode on every creation). Each test also checks the node reached the saved flow.
@@ -56,8 +56,7 @@ test('panel: a choice node dropped from the palette is selected and its properti
   await dropFromPalette(page, 'Choice', { x: 640, y: 760 })
   const dialog = page.getByRole('dialog', { name: 'Choice skill' })
   await expect(dialog).toBeVisible()
-  const value = await page.locator('#choice-question option', { hasText: 'Pilih layanan panel' }).first().getAttribute('value')
-  await page.locator('#choice-question').selectOption(value ?? '')
+  await chooseOption(page, page.locator('#choice-question'), 'Pilih layanan panel')
   await page.getByRole('button', { name: 'Insert', exact: true }).click()
   await expect(dialog).toBeHidden()
   await expectPanelOpenOn(page, /^choice-[0-9a-f]{6}$/)

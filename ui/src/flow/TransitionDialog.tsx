@@ -5,7 +5,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioItem } from '@/components/ui/radio-group'
-import { Select } from '@/components/ui/select'
+import { Combobox } from '@/components/ui/combobox'
 
 export interface TransitionDialogProps {
   open: boolean
@@ -128,19 +128,27 @@ function TransitionForm({ initial, nodeNames, flowNames, onSubmit, onOpenChange 
           <RadioItem value="end">End flow</RadioItem>
         </RadioGroup>
         {destKind === 'node' && (
-          <Select aria-label="Target node" value={nodeTarget} onChange={(e) => setNodeTarget(e.target.value)}>
-            {nodeNames.map((n) => (
-              <option key={n} value={n}>{n}</option>
-            ))}
-          </Select>
+          <Combobox
+            label="Target node"
+            value={nodeTarget}
+            onValueChange={setNodeTarget}
+            options={nodeNames.map((n) => ({ value: n, label: n }))}
+            placeholder="Choose a node"
+            searchPlaceholder="Search nodes..."
+            emptyText="No node matches"
+          />
         )}
         {destKind === 'subflow' && (
           <div className="grid grid-cols-2 gap-2">
-            <Select aria-label="Subflow" value={subflow} onChange={(e) => setSubflow(e.target.value)}>
-              {flowNames.map((n) => (
-                <option key={n} value={n}>{n}</option>
-              ))}
-            </Select>
+            <Combobox
+              label="Subflow"
+              value={subflow}
+              onValueChange={setSubflow}
+              options={flowNames.map((n) => ({ value: n, label: n }))}
+              placeholder="Choose a flow"
+              searchPlaceholder="Search flows..."
+              emptyText="No flow matches"
+            />
             <Input aria-label="Node in subflow" placeholder="Node (optional)" className="font-mono-code" value={subNode} onChange={(e) => setSubNode(e.target.value)} />
           </div>
         )}

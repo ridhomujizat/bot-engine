@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select } from '@/components/ui/select'
+import { Combobox } from '@/components/ui/combobox'
 import { choicesOf, contentPreview, type ChoiceOption } from './ContentForm'
 
 export interface ChoiceSkillValues {
@@ -103,14 +103,16 @@ function ChoiceForm({ contents, initial, busy, error, onOpenChange, onSubmit }: 
     <>
       <div className="grid gap-1.5">
         <Label htmlFor="choice-question">Question</Label>
-        <Select id="choice-question" value={contentId} onChange={(e) => pickQuestion(e.target.value)}>
-          <option value="">Choose a question</option>
-          {questions.map((c) => (
-            <option key={c.id} value={c.id}>
-              {contentPreview(c.contentType, c.formData)}  ·  #!{c.id}
-            </option>
-          ))}
-        </Select>
+        <Combobox
+          id="choice-question"
+          label="Question"
+          value={contentId}
+          onValueChange={pickQuestion}
+          placeholder="Choose a question"
+          searchPlaceholder="Search questions..."
+          emptyText="No question matches"
+          options={questions.map((c) => ({ value: c.id, label: contentPreview(c.contentType, c.formData), detail: `#!${c.id}` }))}
+        />
         <p className="text-xs text-muted-foreground">Single choice content element shown to the user.</p>
       </div>
 
@@ -152,12 +154,16 @@ function ChoiceForm({ contents, initial, busy, error, onOpenChange, onSubmit }: 
         </div>
         <div className="grid gap-1.5">
           <Label htmlFor="choice-invalid">On invalid answer</Label>
-          <Select id="choice-invalid" value={invalidContentId} onChange={(e) => setInvalidContentId(e.target.value)}>
-            <option value="">Default message</option>
-            {texts.map((c) => (
-              <option key={c.id} value={c.id}>{contentPreview(c.contentType, c.formData)}</option>
-            ))}
-          </Select>
+          <Combobox
+            id="choice-invalid"
+            label="On invalid answer"
+            value={invalidContentId}
+            onValueChange={setInvalidContentId}
+            leading={[{ value: '', label: 'Default message' }]}
+            options={texts.map((c) => ({ value: c.id, label: contentPreview(c.contentType, c.formData) }))}
+            searchPlaceholder="Search messages..."
+            emptyText="No message matches"
+          />
         </div>
       </div>
 

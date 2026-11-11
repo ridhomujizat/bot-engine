@@ -16,15 +16,19 @@ import type { ActionDef, CatchAll, ContentElement, FlowJson, FlowNodeJson, FlowV
 import { Rail, Topbar } from '@/app/AppShell'
 import { Button } from '@/components/ui/button'
 import { EmulatorPanel } from '@/emulator/EmulatorPanel'
-import { triggerTexts } from '@/emulator/metadata'
+import { quickStartTriggers } from '@/emulator/metadata'
 import { useEmulator } from '@/emulator/useEmulator'
+import { PREF_FOLLOW, readFlag, writeFlag } from '@/emulator/prefs'
+import { flowTargetLabel, resolveFlowTarget, type FlowTarget } from './navigation'
+import { runEdgeStates, runNodeIds } from './runPath'
 import { cn } from '@/lib/utils'
 import { ActionDialog } from './ActionDialog'
 import { ChoiceSkillDialog, type ChoiceSkillValues } from './ChoiceSkillDialog'
-import { contentPreview } from './ContentForm'
+import { contentLabel } from './preview'
+import type { InspectorTab, NodeTarget } from './flowActions'
 import { FlowCanvas, type CreateMenuRequest, type LinkSource, type NewNodeKind } from './FlowCanvas'
 import { FlowTree } from './FlowTree'
-import { type FlowDoc, type PasteItem, addNode, catchAllOf, centredPositions, connectTransition, copyName, docFromFiles, docFromView, findNode, moveNodes, pasteNodes, removeNodes, removeTransition, removeTransitions, renameNode, setStartNode, unlinkTransitions, toFlowJson, toFlowView, toUiJson, uniqueNodeId, uniqueNodeName, updateCatchAll, updateNode } from './model'
+import { type FlowDoc, type PasteItem, addNode, catchAllOf, centredPositions, connectTransition, copyName, docFromFiles, docFromView, findNode, moveCatchAllItem, moveNodeItem, moveNodes, pasteNodes, removeNodes, removeTransition, removeTransitions, renameNode, setStartNode, unlinkTransitions, toFlowJson, toFlowView, toUiJson, uniqueNodeId, uniqueNodeName, updateCatchAll, updateNode } from './model'
 import { Inspector, type ActionSection } from './Inspector'
 import { FlowWidePanel } from './FlowWidePanel'
 import { CreateMenu } from './CreateMenu'
@@ -38,6 +42,7 @@ import { prettyId } from './ids'
 import { FlowSaver, type SaveStatus } from './autosave'
 import { type ChoiceSkillData, choiceSkillData, mergeSkillTransitions, orphanedSkillFlows, skillFlowDoc } from './skill'
 import { contentIdsOf, remapContentIds, remapSkillContentIds, uniqueContentIds } from './contentCopy'
+import { contentUsageCounts } from './contentEdit'
 type DialogState =
   | { kind: 'none' }
   /** `nodeId` null is the flow-wide list (catchAll). */
@@ -86,6 +91,8 @@ export function FlowEditorPage() {
  // The node whose properties are open. Opened by a click that did not move the node (never by a drag).
   const [inspectorId, setInspectorId] = useState<string | null>(null)
   const [flowWide, setFlowWide] = useState(false)
+  // The tab of the node properties panel (a click on a node card can choose it).
+  const [inspectorTab, setInspectorTab] = useState<InspectorTab>('onEnter')
   const [menu, setMenu] = useState<CreateMenuRequest | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   // Flows whose overlap hint the user closed (until the page is reloaded).
@@ -96,30 +103,35 @@ export function FlowEditorPage() {
     setEdgeStyle(style)
   }
   const [dialog, setDialog] = useState<DialogState>({ kind: 'none' })
+  // A flow opened by a terminal pill or by the emulator: its node is selected and centred once shown.
+  const [focus, setFocus] = useState<{ flow: string; node?: string; nonce: number } | null>(null)
+  // Node to centre on the canvas (set with the selection of `focus`).
+  const [centerId, setCenterId] = useState<string | null>(null)
+  const [follow, setFollow] = useState(() => readFlag(PREF_FOLLOW, true))
   const clipboard = useRef<PasteItem[]>([])
  // Last pointer position on the canvas (flow units): where Ctrl+V pastes.
   const pointer = useRef<Point>({ x: 100, y: 120 })
   const emu = useEmulator(botId)
 
   const contents: ContentElement[] = contentQuery.data ?? NO_CONTENTS
- // Quick-start chips: literal trigger texts of the bot's start nodes (main flow first).
-  const triggers = useMemo(() => triggerTexts(views), [views])
+  // Quick-start chips: literal trigger texts of the bot's start nodes (main flow first).
+  const triggers = useMemo(() => quickStartTriggers(views, flowName), [views, flowName])
   const actions: ActionDef[] = actionsQuery.data ?? NO_ACTIONS
   const contentLabels = useMemo(
-    () => Object.fromEntries(contents.map((c) => [c.id, contentPreview(c.contentType, c.formData)])),
+    () => Object.fromEntries(contents.map((c) => [c.id, contentLabel(c.contentType, c.formData)])),
     [contents],
   )
 
- // Nodes on the emulator's path, highlighted green on the canvas.
-  const runPath = useMemo(() => {
-    if (!doc || !emulatorOpen) return NO_RUN
-    const byName = new Map(doc.nodes.map((n) => [n.name, n.id]))
-    return new Set(emu.stacktrace.map((name) => byName.get(name)).filter((id): id is string => Boolean(id)))
-  }, [doc, emulatorOpen, emu.stacktrace])
+  // Nodes and transitions on the emulator's run path (this flow's part of `state.__stacktrace`).
+  const runPath = useMemo(() => (doc && emulatorOpen ? runNodeIds(doc, emu.stackEntries, flowName) : NO_RUN), [doc, emulatorOpen, emu.stackEntries, flowName])
+  const runEdges = useMemo(
+    () => (doc && emulatorOpen ? runEdgeStates(doc, emu.stackEntries, flowName) : undefined),
+    [doc, emulatorOpen, emu.stackEntries, flowName],
+  )
 
   const graph = useMemo(
-    () => (doc ? toGraph({ doc, contentLabels, runPath }) : { nodes: [], edges: [] }),
-    [doc, contentLabels, runPath],
+    () => (doc ? toGraph({ doc, contentLabels, runPath, runEdges }) : { nodes: [], edges: [] }),
+    [doc, contentLabels, runPath, runEdges],
   )
 
   const selectedNode =
@@ -128,6 +140,8 @@ export function FlowEditorPage() {
 
  // ---- Autosave (legacy FlowsAPI.updateFlow: debounced 1000ms, leading) -------------------------
   const { settle: settleDraft, drafts: draftMap } = drafts
+  // Every loaded flow (drafts over the saved state): the references each content element has.
+  const usageCounts = useMemo(() => contentUsageCounts(Object.values({ ...serverDocs, ...draftMap })), [serverDocs, draftMap])
   const [saveStatus, setSaveStatus] = useState<SaveStatus>({ kind: 'saved' })
  // Drafts as the saver sees them. Settling a save updates it at once, so the saver never re-writes a saved draft.
   const mirror = useRef(draftMap)
@@ -189,7 +203,7 @@ export function FlowEditorPage() {
     onSuccess: (_void, name) => {
       void queryClient.invalidateQueries({ queryKey: ['flows', botId] })
       setDialog({ kind: 'none' })
-      setParams({ flow: name })
+      goToFlow(name)
     },
   })
 
@@ -198,7 +212,7 @@ export function FlowEditorPage() {
     onSuccess: (_void, name) => {
       drafts.discard([name])
       void queryClient.invalidateQueries({ queryKey: ['flows', botId] })
-      if (name === flowName) setParams({ flow: DEFAULT_FLOW })
+      if (name === flowName) goToFlow(DEFAULT_FLOW)
     },
   })
 
@@ -286,7 +300,7 @@ export function FlowEditorPage() {
       drafts.discard([from])
       void queryClient.invalidateQueries({ queryKey: ['flows', botId] })
       setDialog({ kind: 'none' })
-      if (flowName === from) setParams({ flow: to })
+      if (flowName === from) goToFlow(to)
     },
   })
 
@@ -301,7 +315,7 @@ export function FlowEditorPage() {
     onSuccess: (to) => {
       void queryClient.invalidateQueries({ queryKey: ['flows', botId] })
       setDialog({ kind: 'none' })
-      setParams({ flow: to })
+      goToFlow(to)
     },
   })
 
@@ -469,6 +483,57 @@ export function FlowEditorPage() {
     return () => window.removeEventListener('keydown', onKey)
   })
 
+  // A pending focus (terminal pill or followed conversation) selects and centres its node once its flow is shown.
+  useEffect(() => {
+    if (!focus || !doc || focus.flow !== flowName) return
+    setFocus(null)
+    const node = focus.node ? doc.nodes.find((n) => n.name === focus.node) : undefined
+    if (!node) return
+    setSelected([node.id])
+    setSelectRequest(node.id)
+    setInspectorId(node.id)
+    setFlowWide(false)
+    setCenterId(node.id)
+  }, [focus, doc, flowName])
+
+  // Follow conversation: each new reply moves the editor to the flow and node the conversation is on.
+  const lastState = useRef(emu.state)
+  useEffect(() => {
+    if (lastState.current === emu.state) return
+    lastState.current = emu.state
+    if (!follow || !emu.state) return
+    const ctx = emu.state.context
+    const target = ctx?.currentFlow
+    if (!target || !names.includes(target)) return
+    setFocus({ flow: target, node: ctx?.currentNode, nonce: Date.now() })
+    if (target !== flowName) goToFlow(target)
+  }, [emu.state, follow, names, flowName])
+
+  /** Opens a flow, keeping the emulator and the view open. Pending autosave is written first. */
+  function goToFlow(name: string) {
+    setParams((prev) => {
+      const next = new URLSearchParams(prev)
+      next.set('flow', name)
+      return next
+    })
+  }
+
+  /** A terminal pill of a transition: opens its flow (and selects and centres its node). */
+  function openFlowTarget(target: FlowTarget) {
+    const resolved = resolveFlowTarget(flowTargetLabel(target), names)
+    if (!resolved) {
+      setNotice(`${target.flow} is not in this bot.`)
+      return
+    }
+    setSelected([])
+    setInspectorId(null)
+    setFlowWide(false)
+    void saver.flush(Object.keys(mirror.current)).catch(() => undefined).then(() => {
+      setFocus({ flow: resolved.flow, node: resolved.node, nonce: Date.now() })
+      goToFlow(resolved.flow)
+    })
+  }
+
   if (!botId) return null
 
   const editDoc = (change: (d: FlowDoc) => FlowDoc) => {
@@ -558,7 +623,7 @@ export function FlowEditorPage() {
             setSelected([])
             setInspectorId(null)
             setFlowWide(false)
-            setParams({ flow: name, ...(jsonView ? { view: 'json' } : {}) })
+            goToFlow(name)
           }}
           onNew={() => setDialog({ kind: 'newFlow' })}
           onRename={(name) => setDialog({ kind: 'renameFlow', name })}
@@ -598,6 +663,8 @@ export function FlowEditorPage() {
                 nodes={graph.nodes}
                 edges={graph.edges}
                 selectRequest={selectRequest}
+                centerRequest={centerId}
+                onCenterDone={() => setCenterId(null)}
                 edgeStyle={edgeStyle}
                 onEdgeStyleChange={changeEdgeStyle}
                 onSelectRequestDone={() => setSelectRequest(null)}
@@ -611,6 +678,23 @@ export function FlowEditorPage() {
                   onOpenNode: (id) => {
                     setInspectorId(id)
                     setFlowWide(false)
+                  },
+                  openFlow: openFlowTarget,
+                  openNodeTarget: (nodeId: string, target: NodeTarget) => {
+                    // A row on a node card: select the node, open its panel on the right tab, and the row's dialog if any.
+                    setSelected([nodeId])
+                    setSelectRequest(nodeId)
+                    setInspectorId(nodeId)
+                    setFlowWide(false)
+                    if (target.kind === 'action') {
+                      setInspectorTab(target.section)
+                      setDialog({ kind: 'action', section: target.section, nodeId, index: target.index })
+                    } else if (target.kind === 'transition') {
+                      setInspectorTab('transitions')
+                      setDialog({ kind: 'transition', nodeId, index: target.index })
+                    } else {
+                      setInspectorTab(target.tab)
+                    }
                   },
                   onEditNode: (id) => {
                     const node = findNode(doc, id)
@@ -673,6 +757,8 @@ export function FlowEditorPage() {
             node={selectedNode}
             isStart={doc?.meta.startNode === selectedNode.name}
             contentLabels={contentLabels}
+            tab={inspectorTab}
+            onTabChange={setInspectorTab}
             onRename={(name) => {
               if (doc?.nodes.some((n) => n.id !== selectedNode.id && n.name === name)) return
               editDoc((d) => renameNode(d, selectedNode.id, name))
@@ -687,6 +773,8 @@ export function FlowEditorPage() {
             }
             onEditTransition={(index) => setDialog({ kind: 'transition', nodeId: selectedNode.id, index })}
             onRemoveTransition={(index) => editDoc((d) => removeTransitions(d, [{ nodeId: selectedNode.id, index }]))}
+            onMoveAction={(section, from, to) => editDoc((d) => moveNodeItem(d, selectedNode.id, section, from, to))}
+            onMoveTransition={(from, to) => editDoc((d) => moveNodeItem(d, selectedNode.id, 'next', from, to))}
             onClose={() => setInspectorId(null)}
           />
         )}
@@ -700,10 +788,24 @@ export function FlowEditorPage() {
             }
             onEditTransition={(index) => setDialog({ kind: 'transition', nodeId: null, index })}
             onRemoveTransition={(index) => editDoc((d) => updateCatchAll(d, (c) => ({ ...c, next: c.next.filter((_, i) => i !== index) })))}
+            onMoveAction={(_section, from, to) => editDoc((d) => moveCatchAllItem(d, 'onReceive', from, to))}
+            onMoveTransition={(from, to) => editDoc((d) => moveCatchAllItem(d, 'next', from, to))}
             onClose={() => setFlowWide(false)}
           />
         )}
-        {emulatorOpen && <EmulatorPanel emu={emu} botId={botId} triggers={triggers} onClose={() => setFlowParam(setParams, 'emulator', null)} />}
+        {emulatorOpen && (
+          <EmulatorPanel
+            emu={emu}
+            botId={botId}
+            triggers={triggers}
+            follow={follow}
+            onFollowChange={(on) => {
+              writeFlag(PREF_FOLLOW, on)
+              setFollow(on)
+            }}
+            onClose={() => setFlowParam(setParams, 'emulator', null)}
+          />
+        )}
       </div>
 
       <footer className="flex h-[26px] shrink-0 items-center justify-between border-t border-border bg-background px-3 text-[11px] text-muted-foreground">
@@ -721,6 +823,7 @@ export function FlowEditorPage() {
           initial={actionInitial}
           actions={actions}
           contents={contents}
+          usageCounts={usageCounts}
           onSubmit={(raw) => {
             if (dialog.kind !== 'action') return
             const { section, nodeId, index } = dialog

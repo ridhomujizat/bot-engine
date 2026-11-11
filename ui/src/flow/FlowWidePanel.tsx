@@ -1,10 +1,8 @@
-import { GripVertical, Pencil, Trash2, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { useState } from 'react'
 import type { CatchAll } from '@/api/types'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { cn } from '@/lib/utils'
-import { transitionLabel } from './actions'
-import { ActionList, AddButton, RowButton, type ActionSection } from './Inspector'
+import { ActionList, AddButton, TransitionList, type ActionSection } from './Inspector'
 
 export interface FlowWidePanelProps {
   catchAll: CatchAll
@@ -13,6 +11,8 @@ export interface FlowWidePanelProps {
   onRemoveAction: (section: ActionSection, index: number) => void
   onEditTransition: (index: number | null) => void
   onRemoveTransition: (index: number) => void
+  onMoveAction: (section: ActionSection, from: number, to: number) => void
+  onMoveTransition: (from: number, to: number) => void
   onClose: () => void
 }
 
@@ -48,6 +48,7 @@ export function FlowWidePanel(props: FlowWidePanelProps) {
                   contentLabels={props.contentLabels}
                   onEditAction={props.onEditAction}
                   onRemoveAction={props.onRemoveAction}
+                  onMoveAction={props.onMoveAction}
                 />
                 <AddButton label="Add action" onClick={() => props.onEditAction('onReceive', null)} />
               </>
@@ -55,23 +56,15 @@ export function FlowWidePanel(props: FlowWidePanelProps) {
             {tab === 'transitions' && (
               <>
                 <p className="text-xs text-muted-foreground">Checked after a node's own transitions. The first match is followed.</p>
-                {catchAll.next.map((t, i) => (
-                  <div key={i} className="flex items-center gap-2 rounded-lg border border-border bg-background p-2">
-                    <GripVertical className="size-3.5 shrink-0 text-ring" />
-                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                      <span className={cn('truncate text-xs', transitionLabel(t) === t.condition && t.condition !== 'true' ? 'font-mono-code text-[12px]' : 'font-medium')}>
-                        {transitionLabel(t)}
-                      </span>
-                      <span className="truncate text-xs text-muted-foreground">{t.node || 'not connected'}</span>
-                    </div>
-                    <RowButton label="Edit flow-wide transition" onClick={() => props.onEditTransition(i)}>
-                      <Pencil className="size-3.5" />
-                    </RowButton>
-                    <RowButton label="Delete flow-wide transition" onClick={() => props.onRemoveTransition(i)}>
-                      <Trash2 className="size-3.5" />
-                    </RowButton>
-                  </div>
-                ))}
+                <TransitionList
+                  transitions={catchAll.next}
+                  label="Flow-wide transitions"
+                  onEdit={props.onEditTransition}
+                  onRemove={props.onRemoveTransition}
+                  onMove={props.onMoveTransition}
+                  editLabel="Edit flow-wide transition"
+                  removeLabel="Delete flow-wide transition"
+                />
                 <AddButton label="Add transition" onClick={() => props.onEditTransition(null)} />
               </>
             )}

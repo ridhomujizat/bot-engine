@@ -23,22 +23,26 @@ export function StepEdge({ id, sourceX, sourceY, targetX, targetY, data, selecte
       })()
   const { d, arrow, midX, midY } = route
 
-  const onRun = Boolean(data?.onRun)
+  // Run path (emulator): green. The newest step animates more than the earlier ones; reduced motion keeps the colour only.
+  const run = data?.run
+  const onRun = run !== undefined
   const hot = hover || selected || Boolean(data?.highlight)
  // Idle edges are light grey and thin (legacy look). Hot and run-path edges stand out.
   const idle = straight ? '#C4C4CB' : '#BDBDC5'
   const color = onRun ? '#16A34A' : hot ? '#18181B' : idle
-  const width = onRun ? 2 : hot ? 2 : straight ? 1 : 1.25
+  const width = run === 'recent' ? 2.75 : onRun ? 2.25 : hot ? 2 : straight ? 1 : 1.25
+  const runClass = run === 'recent' ? 'run-edge run-edge-recent' : run === 'past' ? 'run-edge' : undefined
 
   return (
     <g
       data-edge-id={id}
       data-edge-style={straight ? 'straight' : 'orthogonal'}
+      data-run={run ?? undefined}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
       <path d={d} fill="none" stroke="transparent" strokeWidth={14} />
-      <path d={d} fill="none" stroke={color} strokeWidth={width} strokeLinecap="round" strokeLinejoin="round" />
+      <path d={d} fill="none" stroke={color} strokeWidth={width} strokeLinecap="round" strokeLinejoin="round" className={runClass} />
       {arrow && <path d={arrow} fill={color} stroke={color} strokeWidth={1} strokeLinejoin="round" />}
       {hover && data && (
         <EdgeLabelRenderer>

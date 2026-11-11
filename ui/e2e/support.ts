@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process'
 import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
-import type { Page } from '@playwright/test'
+import type { Locator, Page } from '@playwright/test'
 
 export const BASE = process.env.E2E_BASE ?? 'http://localhost:3917'
 export const EMAIL = process.env.E2E_EMAIL ?? 'e2e@example.com'
@@ -98,4 +98,13 @@ export async function ensureChoiceQuestion(): Promise<void> {
   await api('POST', botApi('/cms/builtin_single-choice/element'), {
     formData: { 'text$en': 'Pilih layanan', 'choices$en': [{ title: 'Tagihan', value: 'bill' }, { title: 'Paket', value: 'pkg' }] },
   })
+}
+
+/**
+ * Picks an option of a shadcn Select or Combobox: opens the trigger, then clicks the option by its text.
+ * Options are rendered in a portal, so they are found on the page, not inside the trigger's scope.
+ */
+export async function chooseOption(page: Page, trigger: Locator, option: string | RegExp, opts: { exact?: boolean } = {}): Promise<void> {
+  await trigger.click()
+  await page.getByRole('option', { name: option, exact: opts.exact }).first().click()
 }

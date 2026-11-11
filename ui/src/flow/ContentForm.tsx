@@ -4,7 +4,7 @@ import { uploadMedia } from '@/api/studio'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select } from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 
@@ -59,17 +59,54 @@ export function emptyFormData(contentType: string): Record<string, unknown> {
   }
 }
 
+/**
+ * The key a field is stored under. the legacy engine writes language-suffixed keys (`items$en`, `title$en`); a bare
+ * key is used when the element has none. Exact key first, then the first `base$...` key.
+ */
+export function fieldKey(formData: Record<string, unknown>, base: string): string {
+  if (base in formData) return base
+  return Object.keys(formData).find((k) => k.startsWith(`${base}$`)) ?? base
+}
+
+/** The value of a field, read through its language-suffixed key when it has one. */
+export function fieldValue(formData: Record<string, unknown>, base: string): unknown {
+  return formData[fieldKey(formData, base)]
+}
+
+/** A text field (empty when missing or not a string). */
+export function textField(formData: Record<string, unknown>, base: string): string {
+  const value = fieldValue(formData, base)
+  return typeof value === 'string' ? value : ''
+}
+
+/** A list field (empty when missing or not a list). */
+export function listField<T>(formData: Record<string, unknown>, base: string): T[] {
+  const value = fieldValue(formData, base)
+  return Array.isArray(value) ? (value as T[]) : []
+}
+
+/** The file name of a URL or path, without the query string. */
+export function basenameOf(url: string): string {
+  return url.split('?')[0].split('/').pop() ?? ''
+}
+
 /** Short text for the content list and the node pill. */
 export function contentPreview(contentType: string, formData: Record<string, unknown>): string {
-  const str = (v: unknown) => (typeof v === 'string' ? v : '')
   switch (contentType) {
     case 'builtin_text':
     case 'builtin_single-choice':
       return textOf(formData)
-    case 'builtin_carousel':
-      return `Carousel (${Array.isArray(formData.items) ? formData.items.length : 0})`
+    case 'builtin_carousel': {
+      const count = listField(formData, 'items').length
+      return `Carousel (${count})`
+    }
+    case 'builtin_image':
+    case 'builtin_file': {
+      const url = textField(formData, contentType === 'builtin_image' ? 'image' : 'file')
+      return textField(formData, 'title') || basenameOf(url) || contentType
+    }
     default:
-      return str(formData.title) || str(formData.image) || str(formData.file) || contentType
+      return textField(formData, 'title') || textField(formData, 'image') || textField(formData, 'file') || contentType
   }
 }
 
@@ -79,24 +116,40 @@ interface ContentFormProps {
   formData: Record<string, unknown>
   onContentType: (type: string) => void
   onFormData: (data: Record<string, unknown>) => void
+  /** False for an existing element: its type is shown but not changed. */
+  typeEditable?: boolean
+  /** Shows the content type picker above the fields. The action dialog shows the type beside its picker instead. */
+  showType?: boolean
 }
 
-/** Form for one content element. Field names match the built-in content types in legacy. */
-export function ContentForm({ botId, contentType, formData, onContentType, onFormData }: ContentFormProps) {
-  const set = (key: string, value: unknown) => onFormData({ ...formData, [key]: value })
-  const str = (key: string) => (typeof formData[key] === 'string' ? (formData[key] as string) : '')
-  const list = <T,>(key: string): T[] => (Array.isArray(formData[key]) ? (formData[key] as T[]) : [])
+/** Form for one content element. Field names match the built-in content types in the legacy editor. */
+export function ContentForm({ botId, contentType, formData, onContentType, onFormData, typeEditable = true, showType = true }: ContentFormProps) {
+  // Writes go to the key the element already uses (`title$en` stays `title$en`).
+  const set = (key: string, value: unknown) => onFormData({ ...formData, [fieldKey(formData, key)]: value })
+  const str = (key: string) => textField(formData, key)
+  const list = <T,>(key: string): T[] => listField<T>(formData, key)
 
   return (
     <div className="grid gap-3">
+      {showType && (
       <div className="grid gap-1.5">
         <Label htmlFor="content-type">Content type</Label>
-        <Select id="content-type" value={contentType} onChange={(e) => onContentType(e.target.value)}>
-          {CONTENT_TYPES.map((t) => (
-            <option key={t.id} value={t.id}>{t.label}</option>
-          ))}
-        </Select>
+        {typeEditable ? (
+          <Select value={contentType} onValueChange={onContentType}>
+            <SelectTrigger id="content-type" aria-label="Content type">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {CONTENT_TYPES.map((t) => (
+                <SelectItem key={t.id} value={t.id}>{t.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <p id="content-type" className="text-[13px]">{CONTENT_TYPES.find((t) => t.id === contentType)?.label ?? contentType}</p>
+        )}
       </div>
+      )}
 
       {contentType === 'builtin_text' && (
         <div className="grid gap-1.5">
@@ -121,11 +174,17 @@ export function ContentForm({ botId, contentType, formData, onContentType, onFor
             items={choicesOf(formData)}
             empty={{ title: '', value: '' }}
             onChange={(items) => set(CHOICES, items)}
+            header={
+              <div className="grid grid-cols-2 gap-2 pr-9 text-xs font-medium text-muted-foreground">
+                <span>Title</span>
+                <span>Value</span>
+              </div>
+            }
             render={(item, update) => (
-              <>
+              <div className="grid min-w-0 flex-1 grid-cols-2 gap-2">
                 <Input aria-label="Choice title" placeholder="Title" value={item.title} onChange={(e) => update({ ...item, title: e.target.value })} />
-                <Input aria-label="Choice value" className="w-[120px] font-mono-code" placeholder="value" value={item.value} onChange={(e) => update({ ...item, value: e.target.value })} />
-              </>
+                <Input aria-label="Choice value" placeholder="Value" value={item.value} onChange={(e) => update({ ...item, value: e.target.value })} />
+              </div>
             )}
           />
         </>
@@ -236,16 +295,20 @@ function ListEditor<T>({
   empty,
   onChange,
   render,
+  header,
 }: {
   label: string
   items: T[]
   empty: T
   onChange: (items: T[]) => void
   render: (item: T, update: (item: T) => void) => ReactNode
+  /** Column titles above the rows (for example "Title" / "Value"). */
+  header?: ReactNode
 }) {
   return (
     <div className="grid gap-2">
       <Label>{label}</Label>
+      {header}
       {items.map((item, i) => (
         <div key={i} className="flex items-start gap-2">
           {render(item, (next) => onChange(items.map((x, j) => (j === i ? next : x))))}

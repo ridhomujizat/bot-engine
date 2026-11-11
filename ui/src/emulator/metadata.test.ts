@@ -7,7 +7,7 @@ import {
   metadataKey,
   parseMetadata,
   readStoredMetadata,
-  triggerTexts,
+  quickStartTriggers,
   writeStoredMetadata,
 } from './metadata'
 
@@ -93,7 +93,7 @@ it('finds the start node by name, as legacy files do', () => {
   const f = flow('main.flow.json', 'entry', ["event.preview == 'go'"])
   f.nodes[0].name = 'entry'
   f.nodes[0].id = 'n-entry'
-  expect(triggerTexts([f])).toEqual(['go'])
+  expect(quickStartTriggers([f], undefined)).toEqual(['go'])
 })
 
 function flow(name: string, startNode: string, conditions: string[]): FlowView {
@@ -109,22 +109,42 @@ function flow(name: string, startNode: string, conditions: string[]): FlowView {
   } as unknown as FlowView
 }
 
-describe('triggerTexts', () => {
-  it('lists literal start-node triggers in order, main flow first, without duplicates', () => {
-    const triggers = triggerTexts([
-      flow('RCP.flow.json', 'init', ["event.preview == 'rcp-trigger'", "event.preview == 'start'"]),
-      flow('main.flow.json', 'init', [
-        "event.preview == 'start'",
-        "event.preview == 'start-rcp'",
-        'event.payload.text === "#dev-langganan"',
-        'session.x === 1',
-        'true',
-      ]),
-    ])
-    expect(triggers).toEqual(['start', 'start-rcp', '#dev-langganan', 'rcp-trigger'])
+describe('quickStartTriggers', () => {
+  it('lists literal start-node triggers of the main flow first, without duplicates', () => {
+    const triggers = quickStartTriggers(
+      [
+        flow('RCP.flow.json', 'init', ["event.preview == 'rcp-trigger'", "event.preview == 'start'"]),
+        flow('main.flow.json', 'init', [
+          "event.preview == 'start'",
+          "event.preview == 'start-rcp'",
+          'event.payload.text === "#dev-langganan"',
+          'session.x === 1',
+          'true',
+        ]),
+      ],
+      undefined,
+    )
+    expect(triggers).toEqual(['start', 'start-rcp', '#dev-langganan'])
+  })
+
+  it('adds the start node of the open flow after the main flow, and ignores other flows', () => {
+    const flows = [
+      flow('main.flow.json', 'init', ["event.preview == 'start'"]),
+      flow('skills/choice-1.flow.json', 'init', ["event.preview == 'choice-open'"]),
+      flow('other.flow.json', 'init', ["event.preview == 'elsewhere'"]),
+    ]
+    expect(quickStartTriggers(flows, 'skills/choice-1.flow.json')).toEqual(['start', 'choice-open'])
+    expect(quickStartTriggers(flows, 'main.flow.json')).toEqual(['start'])
+  })
+
+  it('caps the chips at the limit', () => {
+    const many = Array.from({ length: 9 }, (_, i) => `event.preview == 't${i}'`)
+    const triggers = quickStartTriggers([flow('main.flow.json', 'init', many)], undefined)
+    expect(triggers).toEqual(['t0', 't1', 't2', 't3', 't4', 't5'])
+    expect(quickStartTriggers([flow('main.flow.json', 'init', many)], undefined, 2)).toEqual(['t0', 't1'])
   })
 
   it('returns nothing when no start-node transition compares text', () => {
-    expect(triggerTexts([flow('main.flow.json', 'init', ['true'])])).toEqual([])
+    expect(quickStartTriggers([flow('main.flow.json', 'init', ['true'])], undefined)).toEqual([])
   })
 })

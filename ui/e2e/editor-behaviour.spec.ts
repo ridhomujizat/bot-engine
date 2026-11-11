@@ -118,7 +118,8 @@ test('the start node cannot be deleted; legacy message shown and the node stays'
   await openFlow(page, name)
   await nodeEl(page, 'entry').locator('span.truncate').first().click()
   await page.keyboard.press('Delete')
-  await expect(page.getByRole('status')).toHaveText("You can't delete the start node.")
+  // The status line (dnd-kit adds its own live region with the same role, hence the text filter).
+  await expect(page.getByRole('status').filter({ hasText: "You can't delete the start node." })).toHaveText("You can't delete the start node.")
   await expect(nodeEl(page, 'entry')).toBeVisible()
 })
 

@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page } from '@playwright/test'
 import { dragNodeBy, type Session } from './parity-lib'
+import { chooseOption } from './support'
 import type { Point } from './parity-legacy'
 
 // Drives the bot-engine editor (ours) through its UI, with the same operations as LegacyDriver.
@@ -147,8 +148,7 @@ export class OursDriver {
     await this.dropFromPalette('Choice', at)
     const dialog = this.page.getByRole('dialog')
     await expect(dialog).toBeVisible({ timeout: 15_000 })
-    const value = await dialog.locator('#choice-question option', { hasText: question }).first().getAttribute('value')
-    await dialog.locator('#choice-question').selectOption(value ?? '')
+    await chooseOption(this.page, dialog.locator('#choice-question'), question)
     await this.fillChoiceFields(dialog, keyword, maxRetries)
     await dialog.getByRole('button', { name: 'Insert', exact: true }).click()
     await this.settle()
@@ -202,10 +202,9 @@ export class OursDriver {
 
   async sayPick(name: string, text: string) {
     const dialog = await this.openAddAction(name)
-    await dialog.getByRole('tab', { name: 'Pick existing' }).click()
-    const value = await dialog.locator('#pick-content option', { hasText: text }).first().getAttribute('value')
-    await dialog.locator('#pick-content').selectOption(value ?? '')
-    await dialog.getByRole('button', { name: 'Add action (Alt+Enter)', exact: true }).click()
+    // The element picker names the element; the action then saves as a reference (no formData change).
+    await chooseOption(this.page, dialog.getByRole('combobox', { name: 'Content element', exact: true }), text)
+    await dialog.getByRole('button', { name: /^(Save action|Add action \(Alt\+Enter\))$/ }).click()
     await this.settle()
   }
 
@@ -216,7 +215,7 @@ export class OursDriver {
       await dialog.getByRole('textbox', { name: 'Raw expression' }).fill(condition)
     }
     await dialog.getByRole('radio', { name: 'Transition to node', exact: true }).click()
-    await dialog.getByLabel('Target node').selectOption(target)
+    await chooseOption(this.page, dialog.getByRole('combobox', { name: 'Target node', exact: true }), target, { exact: true })
   }
 
   private flowWidePanel(): Locator {

@@ -36,6 +36,7 @@ describe('toGraph', () => {
     doc: docFromFiles('main.flow.json', flow, ui),
     contentLabels: {},
     runPath: new Set(['entry', 'skill-4cd383']),
+    runEdges: new Map([['entry:0', 'recent' as const]]),
   })
 
   it('creates one React Flow node per flow node, using the skill type for skill-call nodes', () => {
@@ -69,8 +70,17 @@ describe('toGraph', () => {
     expect(chip.position.y + 14).toBe(portY)
   })
 
-  it('marks edges between two nodes on the run path as run edges', () => {
-    expect(edges.find((e) => e.source === 'entry')?.data?.onRun).toBe(true)
+  it('marks the transitions taken on the run path, with their state', () => {
+    const taken = edges.find((e) => e.id === 'entry:0')
+    expect(taken?.data?.onRun).toBe(true)
+    expect(taken?.data?.run).toBe('recent')
     expect(edges.find((e) => e.source === 'skill-4cd383' && e.sourceHandle === 't0')?.data?.onRun).toBe(false)
+  })
+
+  it('gives a flow target pill the flow and node it opens, and END or return no target', () => {
+    const pill = (id: string) => nodes.find((n) => n.id === id)?.data as { target: unknown } | undefined
+    expect(pill(terminalId('skill-4cd383', 2))?.target).toEqual({ flow: 'handover.flow.json', node: 'entry' })
+    expect(pill(terminalId('skill-4cd383', 1))?.target).toBeNull()
+    expect(nodes.find((n) => n.id === terminalId('skill-4cd383', 1))?.data).toMatchObject({ icon: 'return', target: null })
   })
 })

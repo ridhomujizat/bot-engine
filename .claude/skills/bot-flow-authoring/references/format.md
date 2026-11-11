@@ -1,0 +1,117 @@
+# Bot format reference (bot-engine / legacy flow format)
+
+Contents: 1 Folder layout · 2 bot.config.json · 3 Flows · 4 Transitions · 5 Instructions & builtin actions ·
+6 Content elements · 7 Choice skill · 8 Actions & hooks · 9 Templating · 10 Runtime semantics · 11 Supported scope
+
+## 1. Folder layout
+
+```
+<bot-id>/
+  bot.config.json
+  flows/<name>.flow.json + <name>.ui.json        # subfolders allowed; choice skills live in flows/skills/
+  content-elements/<contentType>.json            # one JSON array per type, e.g. builtin_text.json
+  actions/<name>.js                              # subfolders allowed: actions/check-stock/search.js -> "check-stock/search"
+  hooks/before_conversation_end/<name>.js
+  media/…                                        # uploaded files (served at /api/v1/bots/<id>/media/<file>)
+```
+In the database the same files live in `srv_ghost_files` as `data/bots/<bot-id>/<path>`. A `.tgz` export has these
+paths at the archive root. `revisions.json`, `qna/`, `intents/`, `config/qna.json` from legacy exports are ignored.
+
+## 2. bot.config.json
+
+Required: `id` (= folder name), `name`, `defaultLanguage` (normally `en` — every formData key is suffixed with it),
+`languages`. Useful: `dialog.timeoutInterval` (idle time before timeout.flow.json runs, e.g. `"5m"`),
+`converse.maxMessageLength` (default 360 chars; longer text → 400), `disabled`, `locked` (locked bots reject edits).
+
+## 3. Flows
+
+`<name>.flow.json`:
+```json
+{ "version": "0.0.1", "catchAll": {}, "startNode": "entry",
+  "nodes": [
+    { "id": "a1b2c3d4e5", "name": "entry", "type": "standard",
+      "onEnter": ["say #!builtin_text-AbC123"],
+      "onReceive": null,
+      "next": [ { "condition": "true", "node": "menu" } ] } ] }
+```
+- `startNode` is a node **name**. Node `name` is unique per flow and is what transitions reference; `id` is only for ui.json.
+- `onReceive: null` → the node does not wait; `onReceive: []` (or actions) → the dialog stops here until the next user message, then runs onReceive, then transitions. This distinction is the most common bug.
+- `type`: `standard` (or absent) or `skill-call` (choice skill, see 7). Nothing else is supported.
+- `catchAll` (flow-wide): `{ "next": [transitions], "onReceive": [instructions] }` evaluated on every message received while in this flow, before the node's own transitions.
+- Required flows: `main.flow.json` (entry for new conversations), `error.flow.json` (runs when an action throws; can be overridden per conversation with `temp.onErrorFlowTo`). `timeout.flow.json` runs when the user is idle longer than `dialog.timeoutInterval` (typically calls a webhook to close the session).
+
+`<name>.ui.json` (editor only, engine ignores it): `{ "nodes": [{ "id": "<node id>", "position": { "x": 100, "y": 100 } }], "links": [] }`. Positions on a 5px grid; skill flows use `"position": {}`.
+
+## 4. Transitions
+
+`{ "condition": "<JS expression>", "node": "<target>", "caption"?: "<label shown in editor>", "conditionType"?: "always|raw|…" }`
+- Evaluated top to bottom after onEnter (non-waiting node) or onReceive (waiting node); first true wins. End with `"true"`.
+- Conditions see `event`, `user`, `session`, `temp`, `bot`. Common: `event.preview === 'Promo'` (typed text or clicked button title), `event.payload.payload === 'x'` (button value), `temp.valid === true`, `Number(temp.count) > 3`, `session.x !== undefined`, `lastNode=<name>`. A `TypeError` (e.g. `event.nlu.intent.name` with NLU off) evaluates to false.
+- Targets: `node-name` · `other.flow.json` (start node of that flow, pushes a return point) · `other.flow.json#node` · `#` (return to the node that called this subflow; only its transitions are evaluated again, onEnter is NOT re-run) · `##` (return to the calling node and execute it again: onEnter + wait/transitions — e.g. re-show a menu) · `#node` / `##node` (same, but to a named node of the caller flow) · `END` (end conversation: runs before_conversation_end, clears context) · `""` (not connected: nothing happens).
+
+## 5. Instructions & builtin actions
+
+Instruction strings in onEnter/onReceive:
+- `say #!<elementId>` optionally followed by JSON args (`say #!builtin_single-choice-x {"skill":"choice"}`).
+- `<actionName> <JSON args>` — custom action (`actions/<name>.js`) or builtin. Args values are Mustache-rendered first.
+
+Builtins (only these):
+| Action | Args |
+|---|---|
+| `builtin/setVariable` | `{"type":"user|session|temp|bot","name":"x","value":"{{event.payload.metadata.sid}}"}` |
+| `builtin/removeVariable` | `{"type":…,"name":…}` |
+| `builtin/resetSession` | `{}` — clears session + context |
+| `builtin/getGlobalVariable` / `builtin/resetGlobalVariable` | `{"name":…,"output":…}` / `{"name":…}` |
+| `builtin/incrementNumberOfConversations` | `{"output":"$r"}` (first call yields 0) |
+| `builtin/appendContext` / `builtin/resetContext` | `{"contexts":"a,b","ttl":"1"}` / `{}` |
+| `builtin/wait` | `{"delay":1000}` |
+| `basic-skills/choice_parse_answer` / `choice_invalid_answer` | generated by the choice skill only |
+
+## 6. Content elements
+
+`content-elements/<type>.json` = array of `{ "id": "<type>-<6 chars>", "formData": {…}, "createdBy", "createdOn", "modifiedOn" }`.
+formData keys carry the language suffix (`text$en`). Types and fields:
+| Type | formData (without `$en`) | Reply the downstream worker receives |
+|---|---|---|
+| `builtin_text` | `text`, `variations` [], `typing`, `markdown` | `{type:"text", text, typing, markdown}` (a random variation is picked) |
+| `builtin_single-choice` | `text`, `choices` [{title,value}], `typing`, `isDropdown`, `dropdownPlaceholder`, `disableFreeText` | `{type:"single-choice", text, choices, isDropdown, dropdownPlaceholder}` |
+| `builtin_image` | `image` (URL), `title`, `typing` | `{type:"image", image, title}` |
+| `builtin_file` | `file` (URL), `title`, `typing` | `{type:"file", file, title}` |
+| `builtin_card` | `title`, `subtitle`, `image`, `actions` [] | carousel with one item |
+| `builtin_carousel` | `items` [{title, subtitle, image, actions[]}], `typing` | `{type:"carousel", items}` |
+Card/carousel actions: `{"action":"Say something","title","text"}`, `{"action":"Open URL","title","url"}`, `{"action":"Postback","title","payload"}`.
+Falsy fields are dropped from the reply (e.g. `markdown:false`). Never reuse one element for two different texts — editing an element changes every node that says it.
+
+## 7. Choice skill (legacy generator shape)
+
+Main-flow node:
+```json
+{ "id": "skill-123456", "type": "skill-call", "skill": "choice", "name": "choice-123456",
+  "flow": "skills/choice-123456.flow.json", "onEnter": null, "onReceive": null,
+  "next": [ { "caption": "User picked [Tagihan]", "condition": "temp['skill-choice-ret-<rid>'] == \"Tagihan\"", "node": "tagihan" },
+            { "caption": "On failure", "condition": "true", "node": "END" } ] }
+```
+Skill flow `skills/choice-123456.flow.json` (`skillData` = `{randomId, contentId, invalidContentId, keywords {value:[kw…]}, config {nbMaxRetries, repeatChoicesOnInvalid, variableName}}`) with nodes `entry` (3× setVariable reset + `say #!<question> {"skill":"choice"}`) → `parse` (onReceive `basic-skills/choice_parse_answer {…}`; valid → `#`, else `invalid`) → `invalid` (`choice_invalid_answer`; `Number(temp['skill-choice-invalid-count-<rid>']) > Number(<max>)` → `#`, else `sorry`) → `sorry` (say invalid element or question again) → `parse`. Use `flowkit.Bot.choice_skill` or the editor/`generateFlow` API — don't hand-write it. Labels are truncated to 7 chars + `...`.
+Matching: a click/typed text matches when it equals a choice value/title or any keyword (case-insensitive); after `nbMaxRetries` invalid answers the "On failure" transition fires.
+
+## 8. Actions & hooks
+
+Action file = body of `async function (bp, event, user, temp, session, args, process)`; top-level `await` and `return` work. Write state by mutating `temp.x`, `session.x`, `user.x`. Optional JSDoc header (`@title`, `@category`, `@param {string} name - desc`) shows in the editor's action picker.
+Available: `require('axios' | 'form-data' | 'qs' | 'moment' | 'lodash' | 'crypto')`, `Buffer`, `console`, `bp.logger.info/warn/error`, `bp.cms.renderElement(type|#!id, args, event)` → payloads, `bp.events.replyToEvent(event, payloads)` (appends replies in order), `bp.database.insertAndRetrieve(table, data)`. Not available: `setTimeout`, `process.env`, relative `require`, other `bp.*` (validator rejects). Default execution timeout 30s; a thrown error routes to error.flow.json.
+Hooks: only `hooks/before_conversation_end/*.js`, params `(bp, event)`; runs when a conversation reaches END.
+
+## 9. Templating
+
+Mustache interpolation only, HTML-escaped (`&`, `<`, `"`, `'`, `/`, `` ` ``, `=`): `{{session.x}}`, `{{temp.x}}`, `{{user.x}}`, `{{event.preview}}`, `{{event.payload.text}}`, `{{event.payload.metadata.<field>}}`. Missing → empty string. No sections (`{{#x}}`), partials or triple braces needed.
+downstream worker metadata fields available on every message: `sid`, `unique_id`, `accountId`, `channel_sources`, `cust_name`, `tenant_id`, `new_session`, `profile.*`, `raw.*`, `isLocation`, `locationPayload`.
+
+## 10. Runtime semantics worth knowing
+
+- A conversation = dialog state per `{botId}::api::{userId}` (`dialog_sessions`); `temp` and the dialog position are cleared when the conversation reaches END or times out (`dialog.timeoutInterval`); `session` persists until resetSession or session expiry (`sessionTimeoutInterval`, default 30m); `user` attributes persist across conversations.
+- First message of a new conversation starts `main.flow.json` at its start node; there is no auto-reset on the downstream worker's `new_session` flag.
+- Infinite loops (a cycle of non-waiting nodes) are detected and routed to the error flow.
+- Messages of the same user are processed one at a time (lock), so actions don't race.
+
+## 11. Supported scope (validator)
+
+Rejected: node types other than standard/skill-call, skills other than choice, `say @type` inline content, content types outside the six above, Mustache sections/partials, hooks other than before_conversation_end, `bp.*` outside the list above, `require()` of other modules or non-literal paths. NLU, QnA, HITL are not available (`event.nlu` is always empty).
