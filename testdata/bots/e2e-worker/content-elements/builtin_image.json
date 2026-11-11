@@ -1,0 +1,3 @@
+[
+  { "id": "builtin_image-logo", "formData": { "image": "https://example.invalid/logo.png", "title$en": "Logo" } }
+]

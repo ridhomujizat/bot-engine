@@ -1,0 +1,12 @@
+# deps / build output
+node_modules/
+ui/test-results/
+ui/playwright-report/
+# Editor build (Vite) is embedded at build time; only the placeholder is tracked so `go build` works on a fresh clone.
+internal/web/dist/*
+!internal/web/dist/.gitkeep
+# local
+.DS_Store
+*.test
+*.tsbuildinfo
+e2e/legacy.env

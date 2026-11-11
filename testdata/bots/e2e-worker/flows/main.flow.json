@@ -1,0 +1,430 @@
+{
+  "version": "0.0.1",
+  "catchAll": {
+    "next": []
+  },
+  "startNode": "start",
+  "nodes": [
+    {
+      "id": "n-start",
+      "name": "start",
+      "onEnter": [
+        "builtin/setVariable {\"type\":\"session\",\"name\":\"sid\",\"value\":\"{{event.payload.metadata.sid}}\"}",
+        "builtin/setVariable {\"type\":\"session\",\"name\":\"unique_id\",\"value\":\"{{event.payload.metadata.unique_id}}\"}",
+        "builtin/setVariable {\"type\":\"session\",\"name\":\"accountId\",\"value\":\"{{event.payload.metadata.accountId}}\"}",
+        "builtin/setVariable {\"type\":\"session\",\"name\":\"channel_sources\",\"value\":\"{{event.payload.metadata.channel_sources}}\"}",
+        "builtin/setVariable {\"type\":\"session\",\"name\":\"name\",\"value\":\"{{event.payload.metadata.cust_name}}\"}",
+        "remember-mock",
+        "say #!builtin_text-greet"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "true",
+          "node": "menu"
+        }
+      ]
+    },
+    {
+      "id": "n-menu",
+      "name": "menu",
+      "onEnter": [
+        "say #!builtin_single-choice-menu"
+      ],
+      "onReceive": [],
+      "next": [
+        {
+          "condition": "event.payload.payload === 'pb-hello'",
+          "node": "hello"
+        },
+        {
+          "condition": "event.payload.text === 'order'",
+          "node": "order"
+        },
+        {
+          "condition": "event.payload.text === 'card'",
+          "node": "card"
+        },
+        {
+          "condition": "event.payload.text === 'image'",
+          "node": "image"
+        },
+        {
+          "condition": "event.payload.text === 'file'",
+          "node": "file"
+        },
+        {
+          "condition": "event.payload.text === 'carousel'",
+          "node": "carousel"
+        },
+        {
+          "condition": "event.payload.text === 'dropdown'",
+          "node": "dropdown"
+        },
+        {
+          "condition": "event.payload.text === 'webhook'",
+          "node": "webhook"
+        },
+        {
+          "condition": "event.payload.text === 'webhookfail'",
+          "node": "webhookfail"
+        },
+        {
+          "condition": "event.payload.text === 'cms'",
+          "node": "cms"
+        },
+        {
+          "condition": "event.payload.text === 'sub'",
+          "node": "sub"
+        },
+        {
+          "condition": "event.payload.text === 'choice'",
+          "node": "choice-skill"
+        },
+        {
+          "condition": "event.payload.text === 'boom'",
+          "node": "boom"
+        },
+        {
+          "condition": "event.payload.text === 'handover'",
+          "node": "handover"
+        },
+        {
+          "condition": "event.payload.text === 'mustache'",
+          "node": "mustache"
+        },
+        {
+          "condition": "event.payload.text === 'require'",
+          "node": "require"
+        },
+        {
+          "condition": "event.payload.text === 'count'",
+          "node": "count"
+        },
+        {
+          "condition": "event.payload.text === 'end'",
+          "node": "END"
+        },
+        {
+          "condition": "true",
+          "node": "invalid"
+        }
+      ]
+    },
+    {
+      "id": "n-hello",
+      "name": "hello",
+      "onEnter": [
+        "say #!builtin_text-hello"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "true",
+          "node": "menu"
+        }
+      ]
+    },
+    {
+      "id": "n-order",
+      "name": "order",
+      "onEnter": [
+        "say #!builtin_text-order"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "true",
+          "node": "menu"
+        }
+      ]
+    },
+    {
+      "id": "n-card",
+      "name": "card",
+      "onEnter": [
+        "say #!builtin_card-one"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "true",
+          "node": "menu"
+        }
+      ]
+    },
+    {
+      "id": "n-image",
+      "name": "image",
+      "onEnter": [
+        "say #!builtin_image-logo"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "true",
+          "node": "menu"
+        }
+      ]
+    },
+    {
+      "id": "n-file",
+      "name": "file",
+      "onEnter": [
+        "say #!builtin_file-doc"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "true",
+          "node": "menu"
+        }
+      ]
+    },
+    {
+      "id": "n-carousel",
+      "name": "carousel",
+      "onEnter": [
+        "say #!builtin_carousel-catalog"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "true",
+          "node": "menu"
+        }
+      ]
+    },
+    {
+      "id": "n-dropdown",
+      "name": "dropdown",
+      "onEnter": [
+        "say #!builtin_single-choice-dd"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "true",
+          "node": "menu"
+        }
+      ]
+    },
+    {
+      "id": "n-webhook",
+      "name": "webhook",
+      "onEnter": [
+        "webhook-notify {\"path\":\"notify\"}",
+        "say #!builtin_text-webhook"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "true",
+          "node": "menu"
+        }
+      ]
+    },
+    {
+      "id": "n-webhookfail",
+      "name": "webhookfail",
+      "onEnter": [
+        "webhook-notify {\"path\":\"fail\"}",
+        "say #!builtin_text-webhook"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "true",
+          "node": "menu"
+        }
+      ]
+    },
+    {
+      "id": "n-cms",
+      "name": "cms",
+      "onEnter": [
+        "render-reply {\"tag\":\"cms\"}"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "true",
+          "node": "menu"
+        }
+      ]
+    },
+    {
+      "id": "n-sub",
+      "name": "sub",
+      "onEnter": [
+        "say #!builtin_text-sub-enter"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "true",
+          "node": "call-sub"
+        }
+      ]
+    },
+    {
+      "id": "n-call-sub",
+      "type": "skill-call",
+      "skill": "choice",
+      "name": "call-sub",
+      "flow": "skills/sub.flow.json",
+      "next": [
+        {
+          "condition": "true",
+          "node": "after-sub"
+        }
+      ]
+    },
+    {
+      "id": "n-after-sub",
+      "name": "after-sub",
+      "onEnter": [
+        "say #!builtin_text-sub-exit"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "true",
+          "node": "menu"
+        }
+      ]
+    },
+    {
+      "id": "n-choice-skill",
+      "type": "skill-call",
+      "skill": "choice",
+      "name": "choice-skill",
+      "flow": "skills/choice-9f2kq7x1ma.flow.json",
+      "next": [
+        {
+          "condition": "temp['skill-choice-valid-9f2kq7x1ma'] === true",
+          "node": "choice-result"
+        },
+        {
+          "condition": "true",
+          "node": "choice-failed"
+        }
+      ]
+    },
+    {
+      "id": "n-choice-result",
+      "name": "choice-result",
+      "onEnter": [
+        "say #!builtin_text-choice-result"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "true",
+          "node": "menu"
+        }
+      ]
+    },
+    {
+      "id": "n-choice-failed",
+      "name": "choice-failed",
+      "onEnter": [
+        "say #!builtin_text-choice-failed"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "true",
+          "node": "menu"
+        }
+      ]
+    },
+    {
+      "id": "n-boom",
+      "name": "boom",
+      "onEnter": [
+        "boom"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "true",
+          "node": "menu"
+        }
+      ]
+    },
+    {
+      "id": "n-handover",
+      "name": "handover",
+      "onEnter": [
+        "handover {\"reason\":\"menu\"}",
+        "say #!builtin_text-handover"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "true",
+          "node": "menu"
+        }
+      ]
+    },
+    {
+      "id": "n-mustache",
+      "name": "mustache",
+      "onEnter": [
+        "say #!builtin_text-mustache"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "true",
+          "node": "menu"
+        }
+      ]
+    },
+    {
+      "id": "n-require",
+      "name": "require",
+      "onEnter": [
+        "require-libs",
+        "say #!builtin_text-libs"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "true",
+          "node": "menu"
+        }
+      ]
+    },
+    {
+      "id": "n-count",
+      "name": "count",
+      "onEnter": [
+        "bump-count",
+        "say #!builtin_text-count"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "true",
+          "node": "menu"
+        }
+      ]
+    },
+    {
+      "id": "n-invalid",
+      "name": "invalid",
+      "onEnter": [
+        "say #!builtin_text-invalid"
+      ],
+      "onReceive": null,
+      "next": [
+        {
+          "condition": "true",
+          "node": "menu"
+        }
+      ]
+    }
+  ]
+}

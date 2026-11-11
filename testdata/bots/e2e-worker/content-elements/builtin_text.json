@@ -1,0 +1,20 @@
+[
+  { "id": "builtin_text-greet", "formData": { "text$en": "Hi {{session.name}}. sid={{session.sid}} uid={{session.unique_id}} acc={{session.accountId}} ch={{session.channel_sources}} tenant={{event.payload.metadata.tenant_id}} msg={{event.payload.text}}", "markdown": false } },
+  { "id": "builtin_text-order", "formData": { "text$en": "Pesanan {{session.sid}} diterima", "markdown": false } },
+  { "id": "builtin_text-invalid", "formData": { "text$en": "Pilihan tidak dikenal", "markdown": false } },
+  { "id": "builtin_text-invalidchoice", "formData": { "text$en": "Jawaban tidak valid, pilih lagi", "markdown": false } },
+  { "id": "builtin_text-error", "formData": { "text$en": "Terjadi error", "markdown": false } },
+  { "id": "builtin_text-timeout", "formData": { "text$en": "Sesi berakhir karena timeout", "markdown": false } },
+  { "id": "builtin_text-sub-enter", "formData": { "text$en": "Masuk subflow", "markdown": false } },
+  { "id": "builtin_text-in-sub", "formData": { "text$en": "Di dalam subflow", "markdown": false } },
+  { "id": "builtin_text-sub-exit", "formData": { "text$en": "Kembali dari subflow", "markdown": false } },
+  { "id": "builtin_text-webhook", "formData": { "text$en": "Webhook status={{session.webhookStatus}} data={{session.webhookData}}", "markdown": false } },
+  { "id": "builtin_text-handover", "formData": { "text$en": "Handover dikirim sid={{session.sid}}", "markdown": false } },
+  { "id": "builtin_text-mustache", "formData": { "text$en": "email={{event.payload.metadata.profile.email}} hp={{event.payload.metadata.profile.mobilePhone}} token={{event.payload.metadata.raw.user.token}} html={{session.name}} nick={{user.nickname}} undef={{session.doesnotexist}}", "markdown": false } },
+  { "id": "builtin_text-count", "formData": { "text$en": "count={{session.count}}", "markdown": false } },
+  { "id": "builtin_text-libs", "formData": { "text$en": "libs={{session.libs}}", "markdown": false } },
+  { "id": "builtin_text-choice-result", "formData": { "text$en": "Skill choice terpilih", "markdown": false } },
+  { "id": "builtin_text-choice-failed", "formData": { "text$en": "Skill choice gagal", "markdown": false } },
+  { "id": "builtin_text-hello", "formData": { "text$en": "Halo lagi {{session.sid}}", "markdown": false } },
+  { "id": "builtin_text-cms", "formData": { "text$en": "cms {{session.count}}", "markdown": false } }
+]

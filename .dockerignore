@@ -1,0 +1,12 @@
+.git
+.gitignore
+**/node_modules
+ui/dist
+ui/.vite
+bin
+docs
+testdata
+**/*.test
+.DS_Store
+flake.nix
+flake.lock

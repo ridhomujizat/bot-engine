@@ -1,0 +1,39 @@
+{
+  "locked": false,
+  "disabled": false,
+  "private": false,
+  "details": {},
+  "$schema": "../../bot.config.schema.json",
+  "description": "E2E parity bot: every feature client worker's traffic relies on, run against legacy and bot-engine.",
+  "active": true,
+  "version": "1.0.0",
+  "author": "example e2e",
+  "license": "AGPL-3.0",
+  "imports": {
+    "modules": [],
+    "incomingMiddleware": [],
+    "outgoingMiddleware": [],
+    "contentTypes": [
+      "builtin_action-button",
+      "builtin_card",
+      "builtin_carousel",
+      "builtin_file",
+      "builtin_image",
+      "builtin_single-choice",
+      "builtin_text",
+      "dropdown"
+    ]
+  },
+  "dialog": {
+    "timeoutInterval": "5s"
+  },
+  "logs": {
+    "expiration": "1 week"
+  },
+  "defaultLanguage": "en",
+  "languages": [
+    "en"
+  ],
+  "id": "e2e-worker",
+  "name": "e2e-worker"
+}

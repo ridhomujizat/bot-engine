@@ -1,0 +1,38 @@
+{
+  "name": "synthetic-choice: choice skill asks, valid keyword answer returns to main flow",
+  "bot": "synthetic-choice",
+  "steps": [
+    {
+      "name": "first message shows the single-choice content",
+      "user": "choice-user",
+      "message": {"type": "text", "text": "hi"},
+      "expect": {
+        "responses": [{"type": "single-choice", "text": "Synthetic choice builtin_single-choice-BytQKo"}]
+      }
+    },
+    {
+      "name": "invalid answer stays in the skill and waits again (no invalid content configured)",
+      "user": "choice-invalid",
+      "message": {"type": "text", "text": "hi"},
+      "expect": {"responses": [{"type": "single-choice"}]}
+    },
+    {
+      "user": "choice-invalid",
+      "message": {"type": "text", "text": "zzz"},
+      "expect": {
+        "responses": [],
+        "currentFlow": "skills/choice-a1bdc2.flow.json",
+        "currentNode": "parse"
+      }
+    },
+    {
+      "name": "keyword answer returns from the skill and runs the matching node",
+      "user": "choice-user",
+      "message": {"type": "text", "text": "testing"},
+      "expect": {
+        "responses": [{"type": "text", "text": "Synthetic text builtin_text-2yeYQ1"}],
+        "contextEmpty": true
+      }
+    }
+  ]
+}

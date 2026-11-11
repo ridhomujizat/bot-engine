@@ -1,0 +1,8 @@
+[
+  { "id": "builtin_text-hello", "formData": { "text$en": "Hello, say something" } },
+  { "id": "builtin_text-echo", "formData": { "text$en": "Echo {{event.payload.text}}" } },
+  { "id": "builtin_text-in-sub", "formData": { "text$en": "In subflow" } },
+  { "id": "builtin_text-back", "formData": { "text$en": "Back in main" } },
+  { "id": "builtin_text-error", "formData": { "text$en": "Something went wrong" } },
+  { "id": "builtin_text-timeout", "formData": { "text$en": "Session timed out" } }
+]

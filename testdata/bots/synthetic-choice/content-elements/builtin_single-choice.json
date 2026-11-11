@@ -1,0 +1,34 @@
+[
+  {
+    "id": "builtin_single-choice-BytQKo",
+    "formData": {
+      "text$en": "Synthetic choice builtin_single-choice-BytQKo",
+      "choices$en": [
+        {
+          "title": "Option A",
+          "value": "Option A"
+        },
+        {
+          "title": "Option B",
+          "value": "Option B"
+        }
+      ]
+    }
+  },
+  {
+    "id": "builtin_single-choice-yOBfeA",
+    "formData": {
+      "text$en": "Synthetic choice builtin_single-choice-yOBfeA",
+      "choices$en": [
+        {
+          "title": "Option A",
+          "value": "Option A"
+        },
+        {
+          "title": "Option B",
+          "value": "Option B"
+        }
+      ]
+    }
+  }
+]

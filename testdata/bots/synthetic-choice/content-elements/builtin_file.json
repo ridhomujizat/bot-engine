@@ -1,0 +1,44 @@
+[
+  {
+    "id": "builtin_file-5d8RC3",
+    "formData": {
+      "file$en": "https://example.invalid/builtin_file-5d8RC3.pdf",
+      "title$en": "Synthetic file builtin_file-5d8RC3"
+    }
+  },
+  {
+    "id": "builtin_file-JiNdnA",
+    "formData": {
+      "file$en": "https://example.invalid/builtin_file-JiNdnA.pdf",
+      "title$en": "Synthetic file builtin_file-JiNdnA"
+    }
+  },
+  {
+    "id": "builtin_file-StehEk",
+    "formData": {
+      "file$en": "https://example.invalid/builtin_file-StehEk.pdf",
+      "title$en": "Synthetic file builtin_file-StehEk"
+    }
+  },
+  {
+    "id": "builtin_file-W0iYzf",
+    "formData": {
+      "file$en": "https://example.invalid/builtin_file-W0iYzf.pdf",
+      "title$en": "Synthetic file builtin_file-W0iYzf"
+    }
+  },
+  {
+    "id": "builtin_file-xihczT",
+    "formData": {
+      "file$en": "https://example.invalid/builtin_file-xihczT.pdf",
+      "title$en": "Synthetic file builtin_file-xihczT"
+    }
+  },
+  {
+    "id": "builtin_file-zhbxq8",
+    "formData": {
+      "file$en": "https://example.invalid/builtin_file-zhbxq8.pdf",
+      "title$en": "Synthetic file builtin_file-zhbxq8"
+    }
+  }
+]

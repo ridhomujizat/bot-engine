@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "catchAll": {},
+  "startNode": "t0",
+  "nodes": [
+    {
+      "id": "n-t0",
+      "name": "t0",
+      "onEnter": [
+        "time-out {\"reason\":\"idle\"}",
+        "say #!builtin_text-timeout"
+      ],
+      "onReceive": null,
+      "next": []
+    }
+  ]
+}

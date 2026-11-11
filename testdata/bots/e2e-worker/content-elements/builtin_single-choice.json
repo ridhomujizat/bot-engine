@@ -1,0 +1,44 @@
+[
+  {
+    "id": "builtin_single-choice-menu",
+    "formData": {
+      "text$en": "Menu utama",
+      "choices$en": [
+        { "title": "Order", "value": "order" },
+        { "title": "Card", "value": "card" },
+        { "title": "Image", "value": "image" },
+        { "title": "File", "value": "file" },
+        { "title": "Carousel", "value": "carousel" },
+        { "title": "Dropdown", "value": "dropdown" },
+        { "title": "Webhook", "value": "webhook" },
+        { "title": "Webhook fail", "value": "webhookfail" },
+        { "title": "CMS", "value": "cms" },
+        { "title": "Sub", "value": "sub" }
+      ]
+    }
+  },
+  {
+    "id": "builtin_single-choice-dd",
+    "formData": {
+      "text$en": "Pilih paket dropdown",
+      "isDropdown": true,
+      "dropdownPlaceholder": "Pilih...",
+      "choices$en": [
+        { "title": "Gold", "value": "gold" },
+        { "title": "Silver", "value": "silver" },
+        { "title": "Bronze", "value": "bronze" }
+      ]
+    }
+  },
+  {
+    "id": "builtin_single-choice-pkg",
+    "formData": {
+      "text$en": "Pilih paket",
+      "choices$en": [
+        { "title": "Gold", "value": "Gold" },
+        { "title": "Silver", "value": "Silver" },
+        { "title": "Bronze", "value": "Bronze" }
+      ]
+    }
+  }
+]

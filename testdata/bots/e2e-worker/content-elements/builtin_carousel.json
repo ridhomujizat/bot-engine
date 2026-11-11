@@ -1,0 +1,11 @@
+[
+  {
+    "id": "builtin_carousel-catalog",
+    "formData": {
+      "items": [
+        { "title": "Produk A", "subtitle": "Deskripsi A", "image": "https://example.invalid/a.png", "actions": [ { "title": "Pilih", "action": "Postback", "payload": "pilih-a", "text": "" } ] },
+        { "title": "Produk B", "subtitle": "Deskripsi B", "image": "https://example.invalid/b.png", "actions": [ { "title": "Buka", "action": "Open URL", "text": "https://example.invalid/b", "payload": "" } ] }
+      ]
+    }
+  }
+]

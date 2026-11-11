@@ -1,0 +1,116 @@
+{
+  "version": "0.0.1",
+  "catchAll": {
+    "next": []
+  },
+  "startNode": "entry",
+  "skillData": {
+    "randomId": "82hxl62cvg",
+    "contentId": "builtin_single-choice-BytQKo",
+    "invalidContentId": "",
+    "keywords": {
+      "example Support Agent": [
+        "example Support Agent"
+      ],
+      "⁠FAQ Enterprise+ (Prepaid)": [
+        "⁠FAQ Enterprise+ (Prepaid)"
+      ],
+      "FAQ Kontraktual (example)": [
+        "FAQ Kontraktual (example)"
+      ],
+      "FAQ Kuota Bersama Personal": [
+        "FAQ Kuota Bersama Personal"
+      ],
+      "FAQ Mobile Plans (Enterprise Connectivity)": [
+        "FAQ Mobile Plans (Enterprise Connectivity)"
+      ],
+      "FAQ Tagihan dan Pembayaran Tagihan (example)": [
+        "FAQ Tagihan dan Pembayaran Tagihan (example)"
+      ],
+      "FAQ Web example": [
+        "FAQ Web example"
+      ],
+      "testing": [
+        "testing"
+      ]
+    },
+    "config": {
+      "nbMaxRetries": 3,
+      "repeatChoicesOnInvalid": false,
+      "variableName": ""
+    }
+  },
+  "nodes": [
+    {
+      "name": "entry",
+      "onEnter": [
+        "builtin/setVariable {\"type\":\"temp\",\"name\":\"skill-choice-invalid-count-82hxl62cvg\",\"value\": 0}",
+        "builtin/setVariable {\"type\":\"temp\",\"name\":\"skill-choice-valid-82hxl62cvg\",\"value\": null}",
+        "builtin/setVariable {\"type\":\"temp\",\"name\":\"skill-choice-ret-82hxl62cvg\",\"value\": null}",
+        "say #!builtin_single-choice-BytQKo {\"skill\":\"choice\"}"
+      ],
+      "next": [
+        {
+          "condition": "true",
+          "node": "parse"
+        }
+      ],
+      "id": "636020"
+    },
+    {
+      "name": "parse",
+      "onReceive": [
+        "basic-skills/choice_parse_answer {\"randomId\":\"82hxl62cvg\",\"contentId\":\"builtin_single-choice-BytQKo\",\"invalidContentId\":\"\",\"keywords\":{\"example Support Agent\":[\"example Support Agent\"],\"⁠FAQ Enterprise+ (Prepaid)\":[\"⁠FAQ Enterprise+ (Prepaid)\"],\"FAQ Kontraktual (example)\":[\"FAQ Kontraktual (example)\"],\"FAQ Kuota Bersama Personal\":[\"FAQ Kuota Bersama Personal\"],\"FAQ Mobile Plans (Enterprise Connectivity)\":[\"FAQ Mobile Plans (Enterprise Connectivity)\"],\"FAQ Tagihan dan Pembayaran Tagihan (example)\":[\"FAQ Tagihan dan Pembayaran Tagihan (example)\"],\"FAQ Web example\":[\"FAQ Web example\"],\"testing\":[\"testing\"]},\"config\":{\"nbMaxRetries\":3,\"repeatChoicesOnInvalid\":false,\"variableName\":\"\"}}"
+      ],
+      "next": [
+        {
+          "condition": "temp['skill-choice-valid-82hxl62cvg'] === true",
+          "node": "#"
+        },
+        {
+          "condition": "true",
+          "node": "invalid"
+        }
+      ],
+      "triggers": [
+        {
+          "conditions": [
+            {
+              "id": "always"
+            }
+          ]
+        }
+      ],
+      "onEnter": [],
+      "id": "680690"
+    },
+    {
+      "name": "invalid",
+      "onEnter": [
+        "basic-skills/choice_invalid_answer {\"randomId\":\"82hxl62cvg\"}"
+      ],
+      "next": [
+        {
+          "condition": "Number(temp['skill-choice-invalid-count-82hxl62cvg']) > Number(3)",
+          "node": "#"
+        },
+        {
+          "condition": "true",
+          "node": "sorry"
+        }
+      ],
+      "id": "722345"
+    },
+    {
+      "name": "sorry",
+      "onEnter": [],
+      "next": [
+        {
+          "condition": "true",
+          "node": "parse"
+        }
+      ],
+      "id": "254689"
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "name": "synthetic core bot: say/wait, echo loop, subflow with # return, action error, END",
+  "bot": "synthetic-core",
+  "steps": [
+    {
+      "name": "first message says hello and waits",
+      "user": "echo-user",
+      "message": {"type": "text", "text": "hi"},
+      "expect": {
+        "responses": [{"type": "text", "text": "Hello, say something"}],
+        "currentFlow": "main.flow.json",
+        "currentNode": "entry",
+        "stacktrace": ["main.flow.json|entry"],
+        "contextEmpty": false
+      }
+    },
+    {
+      "name": "default branch goes to echo, text interpolated from event",
+      "user": "echo-user",
+      "message": {"type": "text", "text": "echo me"},
+      "expect": {
+        "responses": [{"type": "text", "text": "Echo echo me"}],
+        "currentFlow": "main.flow.json",
+        "currentNode": "echo",
+        "stacktrace": ["main.flow.json|echo"]
+      }
+    },
+    {
+      "name": "subflow starts on skill-call node",
+      "user": "sub-user",
+      "message": {"type": "text", "text": "hi"},
+      "expect": {"responses": [{"type": "text", "text": "Hello, say something"}]}
+    },
+    {
+      "name": "sub transition enters subflow",
+      "user": "sub-user",
+      "message": {"type": "text", "text": "sub"},
+      "expect": {
+        "responses": [{"type": "text", "text": "In subflow"}],
+        "currentFlow": "skills/sub.flow.json",
+        "currentNode": "s1",
+        "stacktrace": ["main.flow.json|call"]
+      }
+    },
+    {
+      "name": "# returns to parent, parent transitions run, dialog ends",
+      "user": "sub-user",
+      "message": {"type": "text", "text": "anything"},
+      "expect": {
+        "responses": [{"type": "text", "text": "Back in main"}],
+        "contextEmpty": true,
+        "stacktrace": ["main.flow.json|call", "main.flow.json|after-sub"]
+      }
+    },
+    {
+      "name": "action error runs error.flow.json",
+      "user": "err-user",
+      "message": {"type": "text", "text": "hi"},
+      "expect": {"responses": [{"type": "text", "text": "Hello, say something"}]}
+    },
+    {
+      "name": "failing JS action goes to error flow",
+      "user": "err-user",
+      "message": {"type": "text", "text": "fail"},
+      "expect": {
+        "responses": [{"type": "text", "text": "Something went wrong"}],
+        "currentFlow": "error.flow.json",
+        "currentNode": "entry",
+        "stacktrace": ["main.flow.json|boom", "error.flow.json|entry"]
+      }
+    },
+    {
+      "name": "END ends the dialog without output",
+      "user": "end-user",
+      "message": {"type": "text", "text": "hi"},
+      "expect": {"responses": [{"type": "text", "text": "Hello, say something"}]}
+    },
+    {
+      "name": "END transition clears context",
+      "user": "end-user",
+      "message": {"type": "text", "text": "end"},
+      "expect": {"responses": [], "contextEmpty": true}
+    }
+  ]
+}

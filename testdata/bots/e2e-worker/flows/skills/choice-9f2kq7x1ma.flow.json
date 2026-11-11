@@ -1,0 +1,71 @@
+{
+  "version": "0.0.1",
+  "catchAll": {
+    "next": []
+  },
+  "startNode": "entry",
+  "skillData": {
+    "randomId": "9f2kq7x1ma",
+    "contentId": "builtin_single-choice-pkg",
+    "invalidContentId": "builtin_text-invalidchoice",
+    "keywords": {
+      "Gold": [ "Gold", "emas" ],
+      "Silver": [ "Silver", "perak" ],
+      "Bronze": [ "Bronze", "perunggu" ]
+    },
+    "config": {
+      "nbMaxRetries": 2,
+      "repeatChoicesOnInvalid": true,
+      "variableName": ""
+    }
+  },
+  "nodes": [
+    {
+      "name": "entry",
+      "onEnter": [
+        "builtin/setVariable {\"type\":\"temp\",\"name\":\"skill-choice-invalid-count-9f2kq7x1ma\",\"value\": 0}",
+        "builtin/setVariable {\"type\":\"temp\",\"name\":\"skill-choice-valid-9f2kq7x1ma\",\"value\": null}",
+        "builtin/setVariable {\"type\":\"temp\",\"name\":\"skill-choice-ret-9f2kq7x1ma\",\"value\": null}",
+        "say #!builtin_single-choice-pkg {\"skill\":\"choice\"}"
+      ],
+      "next": [
+        { "condition": "true", "node": "parse" }
+      ],
+      "id": "e-entry"
+    },
+    {
+      "name": "parse",
+      "onReceive": [
+        "basic-skills/choice_parse_answer {\"randomId\":\"9f2kq7x1ma\",\"contentId\":\"builtin_single-choice-pkg\",\"invalidContentId\":\"builtin_text-invalidchoice\",\"keywords\":{\"Gold\":[\"Gold\",\"emas\"],\"Silver\":[\"Silver\",\"perak\"],\"Bronze\":[\"Bronze\",\"perunggu\"]},\"config\":{\"nbMaxRetries\":2,\"repeatChoicesOnInvalid\":true,\"variableName\":\"\"}}"
+      ],
+      "next": [
+        { "condition": "temp['skill-choice-valid-9f2kq7x1ma'] === true", "node": "#" },
+        { "condition": "true", "node": "invalid" }
+      ],
+      "triggers": [
+        { "conditions": [ { "id": "always" } ] }
+      ],
+      "onEnter": [],
+      "id": "e-parse"
+    },
+    {
+      "name": "invalid",
+      "onEnter": [
+        "basic-skills/choice_invalid_answer {\"randomId\":\"9f2kq7x1ma\"}"
+      ],
+      "next": [
+        { "condition": "Number(temp['skill-choice-invalid-count-9f2kq7x1ma']) > Number(2)", "node": "#" },
+        { "condition": "true", "node": "sorry" }
+      ],
+      "id": "e-invalid"
+    },
+    {
+      "name": "sorry",
+      "onEnter": [],
+      "next": [
+        { "condition": "true", "node": "parse" }
+      ],
+      "id": "e-sorry"
+    }
+  ]
+}

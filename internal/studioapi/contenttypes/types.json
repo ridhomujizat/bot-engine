@@ -1,0 +1,456 @@
+{
+  "builtin_text": {
+    "id": "builtin_text",
+    "title": "text",
+    "group": "Built-in Messages",
+    "jsonSchema": {
+      "description": "module.builtin.types.text.description",
+      "type": "object",
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "title": "module.builtin.types.text.message"
+        },
+        "variations": {
+          "type": "array",
+          "title": "module.builtin.types.text.alternatives",
+          "items": {
+            "type": "string",
+            "default": ""
+          }
+        },
+        "markdown": {
+          "type": "boolean",
+          "title": "module.builtin.useMarkdown",
+          "default": false,
+          "$help": {
+            "text": "module.builtin.markdownHelp",
+            "link": "https://daringfireball.net/projects/markdown/syntax"
+          }
+        },
+        "typing": {
+          "type": "boolean",
+          "title": "module.builtin.typingIndicator",
+          "default": true
+        }
+      }
+    },
+    "uiSchema": {
+      "text": {
+        "ui:field": "i18n_field",
+        "$subtype": "textarea"
+      },
+      "variations": {
+        "ui:options": {
+          "orderable": false
+        }
+      }
+    }
+  },
+  "builtin_single-choice": {
+    "id": "builtin_single-choice",
+    "title": "module.builtin.types.singleChoice.title",
+    "group": "Built-in Messages",
+    "jsonSchema": {
+      "description": "module.builtin.types.singleChoice.description",
+      "type": "object",
+      "required": [
+        "choices"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "title": "message"
+        },
+        "isDropdown": {
+          "type": "boolean",
+          "title": "Show as a dropdown"
+        },
+        "dropdownPlaceholder": {
+          "type": "string",
+          "title": "Dropdown placeholder",
+          "default": "Select..."
+        },
+        "choices": {
+          "type": "array",
+          "title": "module.builtin.types.singleChoice.choice",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {
+            "type": "object",
+            "required": [
+              "title",
+              "value"
+            ],
+            "properties": {
+              "title": {
+                "description": "module.builtin.types.singleChoice.itemTitle",
+                "type": "string",
+                "title": "Message"
+              },
+              "value": {
+                "description": "module.builtin.types.singleChoice.itemValue",
+                "type": "string",
+                "title": "Value"
+              }
+            }
+          }
+        },
+        "markdown": {
+          "type": "boolean",
+          "title": "module.builtin.useMarkdown",
+          "default": false,
+          "$help": {
+            "text": "module.builtin.markdownHelp",
+            "link": "https://daringfireball.net/projects/markdown/syntax"
+          }
+        },
+        "disableFreeText": {
+          "type": "boolean",
+          "title": "module.builtin.disableFreeText",
+          "default": false
+        },
+        "displayInMessage": {
+          "type": "boolean",
+          "title": "module.builtin.types.singleChoice.displayInMessageTitle",
+          "default": false
+        },
+        "typing": {
+          "type": "boolean",
+          "title": "module.builtin.typingIndicator",
+          "default": true
+        }
+      }
+    },
+    "uiSchema": {
+      "text": {
+        "ui:field": "i18n_field",
+        "$subtype": "textarea"
+      },
+      "choices": {
+        "ui:field": "i18n_array"
+      }
+    }
+  },
+  "builtin_carousel": {
+    "id": "builtin_carousel",
+    "title": "module.builtin.types.carousel.title",
+    "group": "Built-in Messages",
+    "jsonSchema": {
+      "description": "module.builtin.types.carousel.description",
+      "type": "object",
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "title": "module.builtin.types.carousel.cards",
+          "items": {
+            "description": "module.builtin.types.card.description",
+            "type": "object",
+            "required": [
+              "title"
+            ],
+            "properties": {
+              "title": {
+                "type": "string",
+                "title": "title"
+              },
+              "subtitle": {
+                "type": "string",
+                "title": "subtitle"
+              },
+              "image": {
+                "type": "string",
+                "$subtype": "image",
+                "$filter": ".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*",
+                "title": "image"
+              },
+              "actions": {
+                "type": "array",
+                "title": "module.builtin.actionButton",
+                "items": {
+                  "description": "module.builtin.types.actionButton.description",
+                  "type": "object",
+                  "required": [
+                    "action",
+                    "title"
+                  ],
+                  "properties": {
+                    "title": {
+                      "type": "string",
+                      "title": "module.builtin.types.actionButton.buttonTitle"
+                    },
+                    "action": {
+                      "type": "string",
+                      "enum": [
+                        "Say something",
+                        "Open URL",
+                        "Postback"
+                      ],
+                      "default": "Say something"
+                    }
+                  },
+                  "dependencies": {
+                    "action": {
+                      "oneOf": [
+                        {
+                          "properties": {
+                            "action": {
+                              "enum": [
+                                "Say something"
+                              ]
+                            },
+                            "text": {
+                              "type": "string",
+                              "title": "Enter text or the ID of a content element (ex: #!builtin_text-myid)"
+                            }
+                          }
+                        },
+                        {
+                          "properties": {
+                            "action": {
+                              "enum": [
+                                "Open URL"
+                              ]
+                            },
+                            "url": {
+                              "type": "string",
+                              "title": "Enter a valid URL"
+                            }
+                          },
+                          "required": [
+                            "url"
+                          ]
+                        },
+                        {
+                          "properties": {
+                            "action": {
+                              "enum": [
+                                "Postback"
+                              ]
+                            },
+                            "payload": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "payload"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              "markdown": {
+                "type": "boolean",
+                "title": "module.builtin.useMarkdown",
+                "default": false,
+                "$help": {
+                  "text": "module.builtin.markdownHelp",
+                  "link": "https://daringfireball.net/projects/markdown/syntax"
+                }
+              }
+            }
+          }
+        },
+        "typing": {
+          "type": "boolean",
+          "title": "module.builtin.typingIndicator",
+          "default": true
+        }
+      }
+    },
+    "uiSchema": {}
+  },
+  "builtin_card": {
+    "id": "builtin_card",
+    "title": "card",
+    "group": "Built-in Messages",
+    "jsonSchema": {
+      "description": "module.builtin.types.card.description",
+      "type": "object",
+      "required": [
+        "title"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "title": "title"
+        },
+        "subtitle": {
+          "type": "string",
+          "title": "subtitle"
+        },
+        "image": {
+          "type": "string",
+          "$subtype": "image",
+          "$filter": ".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*",
+          "title": "image"
+        },
+        "actions": {
+          "type": "array",
+          "title": "module.builtin.actionButton",
+          "items": {
+            "description": "module.builtin.types.actionButton.description",
+            "type": "object",
+            "required": [
+              "action",
+              "title"
+            ],
+            "properties": {
+              "title": {
+                "type": "string",
+                "title": "module.builtin.types.actionButton.buttonTitle"
+              },
+              "action": {
+                "type": "string",
+                "enum": [
+                  "Say something",
+                  "Open URL",
+                  "Postback"
+                ],
+                "default": "Say something"
+              }
+            },
+            "dependencies": {
+              "action": {
+                "oneOf": [
+                  {
+                    "properties": {
+                      "action": {
+                        "enum": [
+                          "Say something"
+                        ]
+                      },
+                      "text": {
+                        "type": "string",
+                        "title": "Enter text or the ID of a content element (ex: #!builtin_text-myid)"
+                      }
+                    }
+                  },
+                  {
+                    "properties": {
+                      "action": {
+                        "enum": [
+                          "Open URL"
+                        ]
+                      },
+                      "url": {
+                        "type": "string",
+                        "title": "Enter a valid URL"
+                      }
+                    },
+                    "required": [
+                      "url"
+                    ]
+                  },
+                  {
+                    "properties": {
+                      "action": {
+                        "enum": [
+                          "Postback"
+                        ]
+                      },
+                      "payload": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "payload"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "markdown": {
+          "type": "boolean",
+          "title": "module.builtin.useMarkdown",
+          "default": false,
+          "$help": {
+            "text": "module.builtin.markdownHelp",
+            "link": "https://daringfireball.net/projects/markdown/syntax"
+          }
+        }
+      }
+    },
+    "uiSchema": {}
+  },
+  "builtin_image": {
+    "id": "builtin_image",
+    "title": "image",
+    "group": "Built-in Messages",
+    "jsonSchema": {
+      "description": "module.builtin.types.image.description",
+      "type": "object",
+      "required": [
+        "image"
+      ],
+      "properties": {
+        "image": {
+          "type": "string",
+          "$subtype": "image",
+          "$filter": ".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*",
+          "title": "module.builtin.types.image.title"
+        },
+        "title": {
+          "type": "string",
+          "title": "module.builtin.types.image.imageLabel",
+          "description": "module.builtin.types.image.labelDesc"
+        },
+        "typing": {
+          "type": "boolean",
+          "title": "module.builtin.typingIndicator",
+          "default": true
+        }
+      }
+    },
+    "uiSchema": {
+      "title": {
+        "ui:field": "i18n_field"
+      }
+    }
+  },
+  "builtin_file": {
+    "id": "builtin_file",
+    "title": "module.builtin.types.file.title",
+    "group": "Built-in Messages",
+    "jsonSchema": {
+      "description": "module.builtin.types.file.description",
+      "type": "object",
+      "$subtype": "file",
+      "required": [
+        "file"
+      ],
+      "properties": {
+        "file": {
+          "type": "string",
+          "$subtype": "file",
+          "$filter": ".pdf",
+          "title": "module.builtin.types.file.title"
+        },
+        "title": {
+          "type": "string",
+          "title": "module.builtin.types.file.fileLabel"
+        },
+        "typing": {
+          "type": "boolean",
+          "title": "module.builtin.typingIndicator",
+          "default": true
+        }
+      }
+    },
+    "uiSchema": {
+      "title": {
+        "ui:field": "i18n_field"
+      }
+    }
+  }
+}

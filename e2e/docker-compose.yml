@@ -1,0 +1,86 @@
+# E2E stack for bot-engine vs legacy (see e2e/README.md).
+# Host ports bind to 127.0.0.1 only. Containers reach the test's mock webhook
+# server on the host through host.docker.internal.
+name: bot-engine-e2e
+
+x-host: &host
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: e2e
+      POSTGRES_PASSWORD: e2e
+      POSTGRES_DB: postgres
+    ports:
+      - "127.0.0.1:${E2E_PG_PORT:-55433}:5432"
+    volumes:
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U e2e -d postgres"]
+      interval: 2s
+      timeout: 3s
+      retries: 60
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "127.0.0.1:${E2E_REDIS_PORT:-56379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  legacy-engine:
+    image: ${LEGACY_IMAGE:?set LEGACY_IMAGE to the legacy engine image}
+    platform: linux/amd64
+    <<: *host
+    env_file:
+      - legacy.env # copy legacy.env.example and fill in; see e2e/README.md
+    environment:
+      DATABASE_URL: postgres://e2e:e2e@postgres:5432/bots_e2e_legacy?sslmode=disable
+      EXTERNAL_URL: http://localhost:3000
+    ports:
+      - "127.0.0.1:${E2E_LEGACY_PORT:-53100}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  bot-engine-a:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    <<: *host
+    environment: &engine-env
+      PORT: "3000"
+      LOG_LEVEL: info
+      DATABASE_URL: postgres://e2e:e2e@postgres:5432/bots_e2e_go?sslmode=disable
+      REDIS_URL: redis://redis:6379/0
+      APP_SECRET: e2e-app-secret-not-for-prod
+      DIALOG_JANITOR_INTERVAL: "${E2E_JANITOR_INTERVAL:-2s}"
+      DIALOG_TIMEOUT_INTERVAL: "5m"
+      EXTERNAL_URL: http://localhost:3000
+    ports:
+      - "127.0.0.1:${E2E_GO_A_PORT:-53101}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  bot-engine-b:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    <<: *host
+    environment: *engine-env
+    ports:
+      - "127.0.0.1:${E2E_GO_B_PORT:-53102}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy

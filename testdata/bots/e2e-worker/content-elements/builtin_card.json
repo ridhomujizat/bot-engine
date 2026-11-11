@@ -1,0 +1,11 @@
+[
+  {
+    "id": "builtin_card-one",
+    "formData": {
+      "title": "Kartu",
+      "subtitle": "Sub kartu",
+      "image": "https://example.invalid/card.png",
+      "actions": [ { "title": "Say", "action": "Say something", "text": "halo", "payload": "" } ]
+    }
+  }
+]

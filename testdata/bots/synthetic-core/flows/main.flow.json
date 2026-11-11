@@ -1,0 +1,52 @@
+{
+  "version": "0.0.1",
+  "catchAll": {},
+  "startNode": "entry",
+  "nodes": [
+    {
+      "id": "n-entry",
+      "name": "entry",
+      "onEnter": ["say #!builtin_text-hello"],
+      "onReceive": [],
+      "next": [
+        { "condition": "event.payload.text === 'sub'", "node": "call" },
+        { "condition": "event.payload.text === 'fail'", "node": "boom" },
+        { "condition": "event.payload.text === 'end'", "node": "END" },
+        { "condition": "true", "node": "echo" }
+      ]
+    },
+    {
+      "id": "n-echo",
+      "name": "echo",
+      "onEnter": ["say #!builtin_text-echo"],
+      "onReceive": [],
+      "next": [
+        { "condition": "true", "node": "entry" }
+      ]
+    },
+    {
+      "id": "n-call",
+      "type": "skill-call",
+      "skill": "choice",
+      "name": "call",
+      "flow": "skills/sub.flow.json",
+      "next": [
+        { "condition": "true", "node": "after-sub" }
+      ]
+    },
+    {
+      "id": "n-after",
+      "name": "after-sub",
+      "onEnter": ["say #!builtin_text-back"],
+      "onReceive": null,
+      "next": []
+    },
+    {
+      "id": "n-boom",
+      "name": "boom",
+      "onEnter": ["fail"],
+      "onReceive": null,
+      "next": []
+    }
+  ]
+}

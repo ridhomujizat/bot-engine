@@ -1,0 +1,193 @@
+{
+  "version": "0.0.1",
+  "catchAll": {},
+  "startNode": "choice-a1bdc2",
+  "nodes": [
+    {
+      "id": "skill-a1bdc2",
+      "type": "skill-call",
+      "skill": "choice",
+      "name": "choice-a1bdc2",
+      "flow": "skills/choice-a1bdc2.flow.json",
+      "next": [
+        {
+          "caption": "User picked [MyEnter...]",
+          "condition": "temp['skill-choice-ret-82hxl62cvg'] == \"example Support Agent\"",
+          "node": "node-5ad0"
+        },
+        {
+          "caption": "User picked [⁠FAQ En...]",
+          "condition": "temp['skill-choice-ret-82hxl62cvg'] == \"⁠FAQ Enterprise+ (Prepaid)\"",
+          "node": "node-d3ca"
+        },
+        {
+          "caption": "User picked [FAQ Kon...]",
+          "condition": "temp['skill-choice-ret-82hxl62cvg'] == \"FAQ Kontraktual (example)\"",
+          "node": "node-cc96"
+        },
+        {
+          "caption": "User picked [FAQ Kuo...]",
+          "condition": "temp['skill-choice-ret-82hxl62cvg'] == \"FAQ Kuota Bersama Personal\"",
+          "node": "node-e7a7"
+        },
+        {
+          "caption": "User picked [FAQ Mob...]",
+          "condition": "temp['skill-choice-ret-82hxl62cvg'] == \"FAQ Mobile Plans (Enterprise Connectivity)\"",
+          "node": "node-58e7"
+        },
+        {
+          "caption": "User picked [FAQ Tag...]",
+          "condition": "temp['skill-choice-ret-82hxl62cvg'] == \"FAQ Tagihan dan Pembayaran Tagihan (example)\"",
+          "node": "node-db13"
+        },
+        {
+          "caption": "User picked [FAQ Web...]",
+          "condition": "temp['skill-choice-ret-82hxl62cvg'] == \"FAQ Web example\"",
+          "node": "node-7412"
+        },
+        {
+          "caption": "User picked [testing]",
+          "condition": "temp['skill-choice-ret-82hxl62cvg'] == \"testing\"",
+          "conditionType": "raw",
+          "node": "test"
+        },
+        {
+          "caption": "On failure",
+          "condition": "true",
+          "node": "END"
+        }
+      ],
+      "onEnter": null,
+      "onReceive": null
+    },
+    {
+      "id": "1231638db7",
+      "name": "node-d3ca",
+      "next": [
+        {
+          "condition": "true",
+          "conditionType": "always",
+          "node": "END"
+        }
+      ],
+      "onEnter": [
+        "say #!builtin_file-5d8RC3"
+      ],
+      "onReceive": null,
+      "type": "standard"
+    },
+    {
+      "id": "c38f749403",
+      "name": "node-5ad0",
+      "next": [
+        {
+          "condition": "true",
+          "conditionType": "always",
+          "node": "END"
+        }
+      ],
+      "onEnter": [
+        "handover {\"name\":\"\",\"value\":\"\"}",
+        "say #!builtin_text-Efg1o8"
+      ],
+      "onReceive": null,
+      "type": "standard"
+    },
+    {
+      "id": "9089060736",
+      "name": "node-cc96",
+      "next": [
+        {
+          "condition": "true",
+          "conditionType": "always",
+          "node": "END"
+        }
+      ],
+      "onEnter": [
+        "say #!builtin_file-StehEk"
+      ],
+      "onReceive": null,
+      "type": "standard"
+    },
+    {
+      "id": "87428e49e5",
+      "name": "node-e7a7",
+      "next": [
+        {
+          "condition": "true",
+          "conditionType": "always",
+          "node": "END"
+        }
+      ],
+      "onEnter": [
+        "say #!builtin_file-W0iYzf"
+      ],
+      "onReceive": null,
+      "type": "standard"
+    },
+    {
+      "id": "8633a07022",
+      "name": "node-58e7",
+      "next": [
+        {
+          "condition": "true",
+          "conditionType": "always",
+          "node": "END"
+        }
+      ],
+      "onEnter": [
+        "say #!builtin_file-xihczT"
+      ],
+      "onReceive": null,
+      "type": "standard"
+    },
+    {
+      "id": "32b44e978c",
+      "name": "node-db13",
+      "next": [
+        {
+          "condition": "true",
+          "conditionType": "always",
+          "node": "END"
+        }
+      ],
+      "onEnter": [
+        "say #!builtin_file-zhbxq8"
+      ],
+      "onReceive": null,
+      "type": "standard"
+    },
+    {
+      "id": "1a31a41a5f",
+      "name": "node-7412",
+      "next": [
+        {
+          "condition": "true",
+          "conditionType": "always",
+          "node": "END"
+        }
+      ],
+      "onEnter": [
+        "say #!builtin_file-JiNdnA"
+      ],
+      "onReceive": null,
+      "type": "standard"
+    },
+    {
+      "id": "8e675c3ef9",
+      "name": "test",
+      "next": [
+        {
+          "condition": "true",
+          "conditionType": "always",
+          "node": "END"
+        }
+      ],
+      "onEnter": [
+        "say #!builtin_text-2yeYQ1"
+      ],
+      "onReceive": null,
+      "type": "standard"
+    }
+  ]
+}
